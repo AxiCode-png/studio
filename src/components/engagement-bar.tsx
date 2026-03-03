@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -38,7 +37,10 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      const response = await fetch(videoUrl);
+      // محاولة التحميل عبر Fetch (قد تفشل بسبب CORS للمواقع الخارجية)
+      const response = await fetch(videoUrl, { mode: 'cors' });
+      if (!response.ok) throw new Error("CORS limit");
+      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -50,7 +52,12 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
       window.URL.revokeObjectURL(url);
       toast({ title: "تم بدء تحميل الفيديو! ✅" });
     } catch (error) {
-      toast({ title: "فشل التحميل", description: "قد تحتاج للسماح بالوصول للملفات", variant: "destructive" });
+      // في حال فشل CORS، نفتح الفيديو في نافذة جديدة ليقوم المستخدم بحفظه يدوياً
+      window.open(videoUrl, '_blank');
+      toast({ 
+        title: "جاري فتح الفيديو للحفظ", 
+        description: "اضغط مطولاً على الفيديو واختر 'حفظ الفيديو' إذا لم يبدأ تلقائياً.",
+      });
     } finally {
       setIsDownloading(false);
     }

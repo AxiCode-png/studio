@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -29,7 +28,6 @@ export default function AuthPage() {
     password: ''
   });
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user && !isUserLoading) {
       router.push('/');
@@ -47,16 +45,12 @@ export default function AuthPage() {
       return;
     }
     setIsLoading(true);
-    
-    // Using non-blocking signup as per instructions
     initiateEmailSignUp(auth, formData.email, formData.password);
-    
-    // We listen for auth state change via the provider, but we need to handle profile data
-    // For MVP, we'll wait for the user object to appear and then update firestore
     toast({ title: "جاري إنشاء الحساب..." });
+    // Reset loading after 5 seconds if no response (fallback)
+    setTimeout(() => setIsLoading(false), 5000);
   };
 
-  // When user is created, save their profile data
   useEffect(() => {
     if (user && formData.firstName) {
       const userRef = doc(db, 'users', user.uid);
@@ -73,14 +67,14 @@ export default function AuthPage() {
         displayName: `${formData.firstName} ${formData.lastName}`
       });
     }
-  }, [user, db]);
+  }, [user, db, formData.firstName]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Using non-blocking signin as per instructions
     initiateEmailSignIn(auth, formData.email, formData.password);
     toast({ title: "جاري الدخول..." });
+    setTimeout(() => setIsLoading(false), 5000);
   };
 
   return (

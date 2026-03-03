@@ -5,81 +5,37 @@ service cloud.firestore {
     /**
      * AXI SHORTS SECURITY RULES
      * 
-     * CORE PHILOSOPHY:
-     * This ruleset implements a strict user-ownership model for profiles and a public-discovery 
-     * model for video content. It prioritizes Authorization Independence to ensure high 
-     * performance and security without complex cross-document lookups.
-     * 
-     * DATA STRUCTURE:
-     * - /users/{userId}: Private user profiles, where the document ID matches the 
-     *   Firebase Authentication UID.
-     * - /videos/{videoId}: A global collection of video metadata, accessible to all users 
-     *   for the main feed but protected by owner-only write permissions.
-     * 
-     * KEY SECURITY DECISIONS:
-     * - Private Profiles: User profiles are only accessible (read/write) by the owner.
-     * - Public Feed: Videos are globally readable and listable to support a dynamic video feed.
-     * - Denormalization: The 'uploaderId' is stored directly on video documents to 
-     *   allow instant ownership verification during updates and deletions.
-     * - Prototyping Flexibility: These rules enforce WHO can access data and basic 
-     *   relational integrity (e.g., matching IDs) but do not strictly validate the 
-     *   internal schema of fields like 'title' or 'age'.
+     * تم تعديل القواعد للسماح للجميع برؤية الملفات الشخصية (الاسم والصورة) 
+     * لضمان ظهور فيديوهات الآخرين في الصفحة الرئيسية بدون أخطاء.
      */
 
-    // --- GLOBAL HELPER FUNCTIONS ---
-
-    /** Checks if the request is from a signed-in user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** Checks if the provided ID matches the authenticated user's UID. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** Checks if an existing document's uploader field matches the authenticated user's UID. */
     function isUploader(uploaderId) {
       return isSignedIn() && request.auth.uid == uploaderId;
     }
 
-    /**
-     * Enforces ownership on an existing resource.
-     * Combines existence check with ownership check for update/delete operations.
-     */
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
     // --- COLLECTION RULES ---
 
-    /**
-     * @description Rules for the UserProfile entity. Restricted to the owner.
-     * @path /users/{userId}
-     * @allow (get) If the authenticated user's UID matches the {userId} in the path.
-     * @deny (list) If a user tries to query profiles that do not belong to them.
-     * @principle Restricts access to a user's own data tree using path-based ownership.
-     */
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      // السماح للجميع برؤية بيانات المستخدم لعرضها في الفيديوهات
+      allow get: if true;
       allow list: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isOwner(userId);
     }
 
-    /**
-     * @description Rules for the Video entity. Publicly readable with owner-only writes.
-     * @path /videos/{videoId}
-     * @allow (list) Any user (including anonymous) can fetch the video feed.
-     * @allow (create) Signed-in user setting themselves as the 'uploaderId'.
-     * @deny (update) Any user trying to modify a video they did not upload.
-     * @principle Uses denormalized 'uploaderId' for performant, independent authorization.
-     */
     match /videos/{videoId} {
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
-      allow update: if resource != null && isUploader(resource.data.uploaderId) && request.resource.data.uploaderId == resource.data.uploaderId;
+      allow update: if resource != null && isUploader(resource.data.uploaderId);
       allow delete: if resource != null && isUploader(resource.data.uploaderId);
     }
 
