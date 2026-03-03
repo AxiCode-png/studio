@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc, increment } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface EngagementBarProps {
   videoId: string;
@@ -21,6 +21,7 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
   const [isLiked, setIsLiked] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const db = useFirestore();
+  const { toast } = useToast();
 
   const userDocRef = useMemoFirebase(() => doc(db, 'users', uploaderId), [db, uploaderId]);
   const { data: userData } = useDoc(userDocRef);
@@ -37,9 +38,9 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
   const handleDownload = async () => {
     setIsDownloading(true);
     try {
-      // محاولة التحميل عبر Fetch (قد تفشل بسبب CORS للمواقع الخارجية)
+      // محاولة التحميل عبر Fetch
       const response = await fetch(videoUrl, { mode: 'cors' });
-      if (!response.ok) throw new Error("CORS limit");
+      if (!response.ok) throw new Error("CORS or Network Error");
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -50,9 +51,10 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast({ title: "تم بدء تحميل الفيديو! ✅" });
+      
+      toast({ title: "تم بدء تحميل الفيديو بنجاح! ✅" });
     } catch (error) {
-      // في حال فشل CORS، نفتح الفيديو في نافذة جديدة ليقوم المستخدم بحفظه يدوياً
+      // في حال فشل CORS، نفتح الفيديو في نافذة جديدة
       window.open(videoUrl, '_blank');
       toast({ 
         title: "جاري فتح الفيديو للحفظ", 
@@ -75,8 +77,8 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
         </div>
       </div>
 
-      <button onClick={handleLike} className="flex flex-col items-center group">
-        <div className="p-2 rounded-full transition-colors group-active:scale-125 duration-100">
+      <button onClick={handleLike} className="flex flex-col items-center group transition-transform active:scale-125">
+        <div className="p-2 rounded-full transition-colors">
           <Heart 
             size={32} 
             className={cn(
@@ -85,37 +87,37 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
             )} 
           />
         </div>
-        <span className="text-white text-xs font-semibold drop-shadow-md">
-          {likes > 999999 ? (likes / 1000000).toFixed(1) + 'M' : likes > 999 ? (likes / 1000).toFixed(1) + 'K' : likes}
+        <span className="text-white text-xs font-bold drop-shadow-md">
+          {likes > 999 ? (likes / 1000).toFixed(1) + 'K' : likes}
         </span>
       </button>
 
       <button className="flex flex-col items-center group">
-        <div className="p-2 rounded-full transition-colors">
+        <div className="p-2 rounded-full">
           <MessageCircle size={32} className="text-white drop-shadow-lg" />
         </div>
-        <span className="text-white text-xs font-semibold drop-shadow-md">{comments}</span>
+        <span className="text-white text-xs font-bold drop-shadow-md">{comments}</span>
       </button>
 
-      <button onClick={handleDownload} disabled={isDownloading} className="flex flex-col items-center group">
-        <div className="p-2 rounded-full transition-colors">
+      <button onClick={handleDownload} disabled={isDownloading} className="flex flex-col items-center group transition-transform active:scale-90">
+        <div className="p-2 rounded-full">
           {isDownloading ? (
             <Loader2 size={32} className="text-primary animate-spin" />
           ) : (
             <Download size={32} className="text-white drop-shadow-lg" />
           )}
         </div>
-        <span className="text-white text-[10px] font-bold drop-shadow-md">حفظ</span>
+        <span className="text-white text-[10px] font-bold drop-shadow-md">تحميل</span>
       </button>
 
       <button className="flex flex-col items-center group">
-        <div className="p-2 rounded-full transition-colors">
+        <div className="p-2 rounded-full">
           <Share2 size={32} className="text-white drop-shadow-lg" />
         </div>
       </button>
 
       <button className="flex flex-col items-center group">
-        <div className="p-2 rounded-full transition-colors">
+        <div className="p-2 rounded-full">
           <MoreHorizontal size={32} className="text-white drop-shadow-lg" />
         </div>
       </button>

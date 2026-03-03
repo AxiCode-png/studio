@@ -3,10 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * AXI SHORTS SECURITY RULES
-     * 
-     * تم تعديل القواعد للسماح للجميع برؤية الملفات الشخصية (الاسم والصورة) 
-     * لضمان ظهور فيديوهات الآخرين في الصفحة الرئيسية بدون أخطاء.
+     * قواعد حماية AXI PRO MAX
+     * تسمح للجميع برؤية الأسماء والصور الشخصية لضمان ظهور الفيديوهات بشكل صحيح للجميع.
      */
 
     function isSignedIn() {
@@ -21,23 +19,19 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uploaderId;
     }
 
-    // --- COLLECTION RULES ---
-
     match /users/{userId} {
-      // السماح للجميع برؤية بيانات المستخدم لعرضها في الفيديوهات
+      // السماح للجميع بقرأة الملف الشخصي لعرض الاسم في الفيديوهات
       allow get: if true;
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isOwner(userId) && request.resource.data.id == resource.data.id;
+      allow list: if isSignedIn();
+      allow create, update: if isOwner(userId);
       allow delete: if isOwner(userId);
     }
 
     match /videos/{videoId} {
+      // الفيديوهات عامة للجميع للمشاهدة
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
-      allow update: if resource != null && isUploader(resource.data.uploaderId);
-      allow delete: if resource != null && isUploader(resource.data.uploaderId);
+      allow update, delete: if isSignedIn() && resource.data.uploaderId == request.auth.uid;
     }
-
   }
 }

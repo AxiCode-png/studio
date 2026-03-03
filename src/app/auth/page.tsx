@@ -47,12 +47,11 @@ export default function AuthPage() {
     setIsLoading(true);
     initiateEmailSignUp(auth, formData.email, formData.password);
     toast({ title: "جاري إنشاء الحساب..." });
-    // Reset loading after 5 seconds if no response (fallback)
-    setTimeout(() => setIsLoading(false), 5000);
   };
 
+  // متابعة إنشاء وثيقة المستخدم في Firestore بعد نجاح التسجيل
   useEffect(() => {
-    if (user && formData.firstName) {
+    if (user && formData.firstName && !isUserLoading) {
       const userRef = doc(db, 'users', user.uid);
       setDocumentNonBlocking(userRef, {
         id: user.uid,
@@ -65,16 +64,18 @@ export default function AuthPage() {
       
       updateProfile(user, {
         displayName: `${formData.firstName} ${formData.lastName}`
-      });
+      }).catch(console.error);
     }
-  }, [user, db, formData.firstName]);
+  }, [user, db, formData.firstName, isUserLoading]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     initiateEmailSignIn(auth, formData.email, formData.password);
-    toast({ title: "جاري الدخول..." });
-    setTimeout(() => setIsLoading(false), 5000);
+    toast({ title: "جاري الدخول إلى AXI..." });
+    
+    // إعادة تعيين حالة التحميل بعد فترة في حال فشل الاستجابة التلقائية
+    setTimeout(() => setIsLoading(false), 3000);
   };
 
   return (
@@ -82,13 +83,13 @@ export default function AuthPage() {
       <Card className="w-full max-w-md border-primary/20 bg-card/80 backdrop-blur-xl shadow-[0_0_50px_rgba(0,229,255,0.1)]">
         <CardHeader className="text-center space-y-1">
           <CardTitle className="text-5xl font-headline font-bold text-primary tracking-tighter">AXI</CardTitle>
-          <CardDescription className="text-white/50 tracking-[0.2em] font-bold text-xs">PRO MAX</CardDescription>
+          <CardDescription className="text-white/50 tracking-[0.2em] font-bold text-xs uppercase">Pro Max Edition</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/20">
-              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-black">تسجيل دخول</TabsTrigger>
-              <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-black">حساب جديد</TabsTrigger>
+              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold">تسجيل دخول</TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold">حساب جديد</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -101,7 +102,7 @@ export default function AuthPage() {
                     placeholder="الجيميل (@gmail.com)" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12"
+                    className="pl-11 bg-white/5 border-none h-12 text-white"
                   />
                 </div>
                 <div className="relative">
@@ -112,11 +113,11 @@ export default function AuthPage() {
                     placeholder="كلمة السر" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12"
+                    className="pl-11 bg-white/5 border-none h-12 text-white"
                   />
                 </div>
-                <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)]" disabled={isLoading}>
-                  {isLoading && !user ? <Loader2 className="animate-spin" /> : "دخول إلى عالم AXI"}
+                <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all active:scale-95" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "دخول إلى عالم AXI"}
                 </Button>
               </form>
             </TabsContent>
@@ -131,7 +132,7 @@ export default function AuthPage() {
                       placeholder="الاسم" 
                       required 
                       onChange={handleInputChange}
-                      className="pl-10 bg-white/5 border-none h-11 text-sm"
+                      className="pl-10 bg-white/5 border-none h-11 text-sm text-white"
                     />
                   </div>
                   <div className="relative">
@@ -141,7 +142,7 @@ export default function AuthPage() {
                       placeholder="اللقب" 
                       required 
                       onChange={handleInputChange}
-                      className="pl-10 bg-white/5 border-none h-11 text-sm"
+                      className="pl-10 bg-white/5 border-none h-11 text-sm text-white"
                     />
                   </div>
                 </div>
@@ -153,7 +154,7 @@ export default function AuthPage() {
                     placeholder="العمر" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12"
+                    className="pl-11 bg-white/5 border-none h-12 text-white"
                   />
                 </div>
                 <div className="relative">
@@ -164,7 +165,7 @@ export default function AuthPage() {
                     placeholder="الجيميل (@gmail.com)" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12"
+                    className="pl-11 bg-white/5 border-none h-12 text-white"
                   />
                 </div>
                 <div className="relative">
@@ -175,11 +176,11 @@ export default function AuthPage() {
                     placeholder="كلمة السر" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12"
+                    className="pl-11 bg-white/5 border-none h-12 text-white"
                   />
                 </div>
-                <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)]" disabled={isLoading}>
-                  {isLoading && !user ? <Loader2 className="animate-spin" /> : "إنضم الآن"}
+                <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all active:scale-95" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "إنضم إلى AXI PRO MAX"}
                 </Button>
               </form>
             </TabsContent>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -25,7 +24,7 @@ export default function Home() {
   }, [user, isUserLoading, router]);
 
   const videosQuery = useMemoFirebase(() => {
-    return query(collection(db, 'videos'), orderBy('uploadTimestamp', 'desc'), limit(20));
+    return query(collection(db, 'videos'), orderBy('uploadTimestamp', 'desc'), limit(50));
   }, [db]);
 
   const { data: videos, isLoading: isVideosLoading } = useCollection(videosQuery);
@@ -66,7 +65,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="video-container">
+      <div className="video-container h-full">
         {videos && videos.length > 0 ? (
           videos.map((video, index) => (
             <div key={video.id} className="video-slide relative">
