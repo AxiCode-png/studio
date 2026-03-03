@@ -1,3 +1,16 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "avatar-1",
+      "description": "User avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx1c2VyJTIwcHJvZmlsZXxlbnwwfHx8fDE3NzI0Njg3NjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "user profile"
+    },
+    {
+      "id": "thumbnail-1",
+      "description": "Video thumbnail",
+      "imageUrl": "https://images.unsplash.com/photo-1632094623680-ef5b74ac0b53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8dmVydGljYWwlMjB2aWRlb3xlbnwwfHx8fDE3NzI1MjQ3MjR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vertical video"
+    }
+  ]
 }
