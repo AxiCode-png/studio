@@ -38,18 +38,22 @@ export default function AuthPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email.endsWith("@gmail.com")) {
       toast({ title: "الرجاء استخدام Gmail فقط!", variant: "destructive" });
       return;
     }
     setIsLoading(true);
-    initiateEmailSignUp(auth, formData.email, formData.password);
-    toast({ title: "جاري إنشاء الحساب..." });
+    try {
+      initiateEmailSignUp(auth, formData.email, formData.password);
+      toast({ title: "جاري إنشاء الحساب..." });
+    } catch (error) {
+      toast({ title: "فشل إنشاء الحساب", variant: "destructive" });
+      setIsLoading(false);
+    }
   };
 
-  // متابعة إنشاء وثيقة المستخدم في Firestore بعد نجاح التسجيل
   useEffect(() => {
     if (user && formData.firstName && !isUserLoading) {
       const userRef = doc(db, 'users', user.uid);
@@ -71,10 +75,12 @@ export default function AuthPage() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    initiateEmailSignIn(auth, formData.email, formData.password);
-    toast({ title: "جاري الدخول إلى AXI..." });
-    
-    // إعادة تعيين حالة التحميل بعد فترة في حال فشل الاستجابة التلقائية
+    try {
+      initiateEmailSignIn(auth, formData.email, formData.password);
+      toast({ title: "جاري الدخول إلى AXI..." });
+    } catch (error) {
+      toast({ title: "خطأ في الدخول", variant: "destructive" });
+    }
     setTimeout(() => setIsLoading(false), 3000);
   };
 

@@ -57,7 +57,6 @@ export default function Home() {
 
   return (
     <main className="relative h-screen w-full bg-black overflow-hidden">
-      {/* Header Overlay */}
       <div className="fixed top-0 left-0 right-0 h-20 flex items-center justify-center z-50 pointer-events-none bg-gradient-to-b from-black/80 to-transparent">
         <div className="flex gap-8 pointer-events-auto">
           <button className="text-white font-headline font-bold text-lg opacity-40 hover:opacity-100 transition-opacity">متابعة</button>
