@@ -1,11 +1,11 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useFirestore } from '@/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, setDocumentNonBlocking } from '@/firebase';
+import { updateProfile } from 'firebase/auth';
+import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { auth } = useAuth();
   const db = useFirestore();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -28,55 +29,58 @@ export default function AuthPage() {
     password: ''
   });
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      router.push('/');
+    }
+  }, [user, isUserLoading, router]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email.endsWith("@gmail.com")) {
       toast({ title: "الرجاء استخدام Gmail فقط!", variant: "destructive" });
       return;
     }
     setIsLoading(true);
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      const user = userCredential.user;
+    
+    // Using non-blocking signup as per instructions
+    initiateEmailSignUp(auth, formData.email, formData.password);
+    
+    // We listen for auth state change via the provider, but we need to handle profile data
+    // For MVP, we'll wait for the user object to appear and then update firestore
+    toast({ title: "جاري إنشاء الحساب..." });
+  };
 
-      await updateProfile(user, {
-        displayName: `${formData.firstName} ${formData.lastName}`
-      });
-
-      await setDoc(doc(db, 'users', user.uid), {
+  // When user is created, save their profile data
+  useEffect(() => {
+    if (user && formData.firstName) {
+      const userRef = doc(db, 'users', user.uid);
+      setDocumentNonBlocking(userRef, {
         id: user.uid,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        age: parseInt(formData.age),
+        age: parseInt(formData.age) || 0,
         email: formData.email,
         joinedAt: new Date().toISOString()
+      }, { merge: true });
+      
+      updateProfile(user, {
+        displayName: `${formData.firstName} ${formData.lastName}`
       });
-
-      toast({ title: "تم إنشاء الحساب بنجاح! 🔥" });
-      router.push('/');
-    } catch (error: any) {
-      toast({ title: "خطأ في التسجيل", description: error.message, variant: "destructive" });
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [user, db]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      toast({ title: "مرحباً بك مجدداً في AXI!" });
-      router.push('/');
-    } catch (error: any) {
-      toast({ title: "خطأ في الدخول", description: error.message, variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
+    // Using non-blocking signin as per instructions
+    initiateEmailSignIn(auth, formData.email, formData.password);
+    toast({ title: "جاري الدخول..." });
   };
 
   return (
@@ -118,7 +122,7 @@ export default function AuthPage() {
                   />
                 </div>
                 <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)]" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : "دخول إلى عالم AXI"}
+                  {isLoading && !user ? <Loader2 className="animate-spin" /> : "دخول إلى عالم AXI"}
                 </Button>
               </form>
             </TabsContent>
@@ -181,7 +185,7 @@ export default function AuthPage() {
                   />
                 </div>
                 <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)]" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : "إنضم الآن"}
+                  {isLoading && !user ? <Loader2 className="animate-spin" /> : "إنضم الآن"}
                 </Button>
               </form>
             </TabsContent>
