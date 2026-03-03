@@ -15,10 +15,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isUploader(uploaderId) {
-      return isSignedIn() && request.auth.uid == uploaderId;
-    }
-
     match /users/{userId} {
       // السماح للجميع بقرأة الملف الشخصي لعرض الاسم في الفيديوهات
       allow get: if true;

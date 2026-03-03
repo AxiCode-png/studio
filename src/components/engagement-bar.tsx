@@ -54,7 +54,7 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
       
       toast({ title: "تم بدء تحميل الفيديو بنجاح! ✅" });
     } catch (error) {
-      // في حال فشل CORS، نفتح الفيديو في نافذة جديدة
+      // في حال فشل CORS، نفتح الفيديو في نافذة جديدة ليتمكن المستخدم من حفظه يدوياً
       window.open(videoUrl, '_blank');
       toast({ 
         title: "جاري فتح الفيديو للحفظ", 
