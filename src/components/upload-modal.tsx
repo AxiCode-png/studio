@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { PlusCircle, Sparkles, Loader2, Upload } from 'lucide-react';
 import { generateCaptionAndHashtags } from '@/ai/flows/ai-caption-and-hashtag-generator';
 import { toast } from '@/hooks/use-toast';
+import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
 
 export function UploadModal() {
   const [description, setDescription] = useState('');
@@ -16,6 +18,9 @@ export function UploadModal() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [open, setOpen] = useState(false);
+  
+  const { user } = useUser();
+  const db = useFirestore();
 
   const handleGenerateAI = async () => {
     if (!description.trim()) {
@@ -35,13 +40,39 @@ export function UploadModal() {
   };
 
   const handleUpload = () => {
+    if (!user) {
+      toast({ title: "Please sign in to upload.", variant: "destructive" });
+      return;
+    }
+    if (!title || !description) {
+      toast({ title: "Title and description are required.", variant: "destructive" });
+      return;
+    }
+
     setIsUploading(true);
-    // Simulation of upload logic
-    setTimeout(() => {
+    
+    // In a real app, you would upload to Firebase Storage first.
+    // For this prototype, we'll use a placeholder video URL.
+    const mockVideoUrl = "https://cdn.pixabay.com/vimeo/328941243/sunset-23136.mp4?width=1280&hash=1406e22c07338e3e4f624867e3a968600d3d5f30";
+
+    const videosRef = collection(db, 'videos');
+    
+    addDocumentNonBlocking(videosRef, {
+      title,
+      description,
+      hashtags,
+      videoUrl: mockVideoUrl,
+      uploaderId: user.uid,
+      likesCount: 0,
+      uploadTimestamp: serverTimestamp()
+    }).then(() => {
       setIsUploading(false);
       setOpen(false);
+      setDescription('');
+      setTitle('');
+      setHashtags([]);
       toast({ title: "Video uploaded successfully!" });
-    }, 2000);
+    });
   };
 
   return (

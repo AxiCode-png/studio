@@ -1,25 +1,59 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Navigation } from '@/components/navigation';
-import { Grid, Lock, Bookmark, Heart } from 'lucide-react';
+import { Grid, Lock, Bookmark, Heart, LogOut } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, signOut } from 'firebase/auth';
+import { useAuth } from '@/firebase';
 
 export default function ProfilePage() {
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
+  const { auth } = useAuth() as any;
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/auth');
+    }
+  }, [user, isUserLoading, router]);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(db, 'users', user.uid);
+  }, [db, user]);
+
+  const { data: profile } = useDoc(userDocRef);
+
+  const handleLogout = async () => {
+    await auth.signOut();
+    router.push('/auth');
+  };
+
+  if (isUserLoading || !user) return null;
+
   return (
     <main className="min-h-screen bg-background pb-20">
-      <div className="flex flex-col items-center pt-12 px-4">
+      <div className="flex flex-col items-center pt-12 px-4 text-center">
         <div className="relative mb-4">
           <Avatar className="w-24 h-24 border-4 border-muted ring-2 ring-primary">
-            <AvatarImage src="https://picsum.photos/seed/me/200/200" />
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarImage src={`https://picsum.photos/seed/${user.uid}/200/200`} />
+            <AvatarFallback>{profile?.firstName?.[0] || 'U'}</AvatarFallback>
           </Avatar>
         </div>
 
-        <h2 className="text-xl font-headline font-bold mb-1">John Doe</h2>
-        <p className="text-muted-foreground text-sm mb-4">@johndoe • 24 years old</p>
+        <h2 className="text-xl font-headline font-bold mb-1">
+          {profile ? `${profile.firstName} ${profile.lastName}` : 'Loading...'}
+        </h2>
+        <p className="text-muted-foreground text-sm mb-4">
+          {profile ? `@${profile.firstName.toLowerCase()}${profile.lastName.toLowerCase()}` : '@user'} 
+          {profile?.age ? ` • ${profile.age} years old` : ''}
+        </p>
 
         <div className="flex gap-8 mb-6">
           <div className="text-center">
@@ -36,9 +70,14 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="flex gap-3 w-full max-w-sm mb-8">
-          <Button className="flex-1 bg-primary text-background font-bold">Edit Profile</Button>
-          <Button variant="outline" className="flex-1 border-muted font-bold text-foreground">Share Profile</Button>
+        <div className="flex flex-col gap-2 w-full max-w-sm mb-8">
+          <div className="flex gap-3">
+            <Button className="flex-1 bg-primary text-background font-bold">Edit Profile</Button>
+            <Button variant="outline" className="flex-1 border-muted font-bold text-foreground">Share Profile</Button>
+          </div>
+          <Button variant="ghost" className="text-destructive font-bold flex items-center gap-2" onClick={handleLogout}>
+            <LogOut size={16} /> Logout
+          </Button>
         </div>
 
         <Tabs defaultValue="videos" className="w-full">
@@ -51,10 +90,10 @@ export default function ProfilePage() {
           
           <TabsContent value="videos" className="mt-1">
             <div className="grid grid-cols-3 gap-0.5">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+              {[1, 2, 3].map((i) => (
                 <div key={i} className="aspect-[3/4] bg-muted relative group overflow-hidden">
                   <img 
-                    src={`https://picsum.photos/seed/vid${i}/300/400`} 
+                    src={`https://picsum.photos/seed/vid${i}${user.uid}/300/400`} 
                     alt="Post" 
                     className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                   />

@@ -1,50 +1,34 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { VideoPlayer } from '@/components/video-player';
 import { EngagementBar } from '@/components/engagement-bar';
 import { VideoInfo } from '@/components/video-info';
 import { Navigation } from '@/components/navigation';
 import { Toaster } from '@/components/ui/toaster';
-
-const MOCK_VIDEOS = [
-  {
-    id: '1',
-    src: 'https://cdn.pixabay.com/vimeo/328941243/sunset-23136.mp4?width=1280&hash=1406e22c07338e3e4f624867e3a968600d3d5f30',
-    username: 'alex_visuals',
-    title: 'Cinematic sunset timelapse at the hidden cliffs. Nature is truly healing.',
-    hashtags: ['sunset', 'cinematic', 'nature', 'vibes'],
-    likes: '1.2M',
-    comments: '4.5K',
-    shares: '12K',
-    avatar: 'https://picsum.photos/seed/alex/200/200'
-  },
-  {
-    id: '2',
-    src: 'https://cdn.pixabay.com/vimeo/457945535/cyberpunk-51475.mp4?width=1280&hash=66e8509b2e68406562507851e3096053f3e2e8e9',
-    username: 'tech_aura',
-    title: 'Neon city nights. Future is here.',
-    hashtags: ['cyberpunk', 'neon', 'citylife', 'future'],
-    likes: '890K',
-    comments: '1.2K',
-    shares: '5.6K',
-    avatar: 'https://picsum.photos/seed/tech/200/200'
-  },
-  {
-    id: '3',
-    src: 'https://cdn.pixabay.com/vimeo/328941243/sunset-23136.mp4?width=1280&hash=1406e22c07338e3e4f624867e3a968600d3d5f30',
-    username: 'travel_junkie',
-    title: 'Exploring the unknown depths of the ocean floor.',
-    hashtags: ['travel', 'ocean', 'adventure', 'blue'],
-    likes: '2.5M',
-    comments: '8.9K',
-    shares: '45K',
-    avatar: 'https://picsum.photos/seed/travel/200/200'
-  }
-];
+import { useUser, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
+  const router = useRouter();
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/auth');
+    }
+  }, [user, isUserLoading, router]);
+
+  const videosQuery = useMemoFirebase(() => {
+    return query(collection(db, 'videos'), orderBy('uploadTimestamp', 'desc'), limit(10));
+  }, [db]);
+
+  const { data: videos, isLoading: isVideosLoading } = useCollection(videosQuery);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -60,9 +44,17 @@ export default function Home() {
     return () => container?.removeEventListener('scroll', handleScroll);
   }, []);
 
+  if (isUserLoading || isVideosLoading) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-background gap-4">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        <p className="text-muted-foreground font-headline font-bold">Loading AXI Feed...</p>
+      </div>
+    );
+  }
+
   return (
     <main className="relative h-screen w-full bg-background overflow-hidden">
-      {/* Top Header Placeholder */}
       <div className="fixed top-0 left-0 right-0 h-16 flex items-center justify-center z-50 pointer-events-none">
         <div className="flex gap-6 pointer-events-auto">
           <button className="text-white font-headline font-bold text-lg opacity-60">Following</button>
@@ -71,28 +63,38 @@ export default function Home() {
       </div>
 
       <div className="video-container">
-        {MOCK_VIDEOS.map((video, index) => (
-          <div key={video.id} className="video-slide relative">
-            <VideoPlayer 
-              src={video.src} 
-              isActive={activeIndex === index} 
-            />
-            <div className="absolute inset-0 glass-overlay pointer-events-none" />
-            
-            <EngagementBar 
-              likes={video.likes} 
-              comments={video.comments} 
-              shares={video.shares}
-              userAvatar={video.avatar}
-            />
-            
-            <VideoInfo 
-              username={video.username} 
-              title={video.title} 
-              hashtags={video.hashtags} 
-            />
+        {videos && videos.length > 0 ? (
+          videos.map((video, index) => (
+            <div key={video.id} className="video-slide relative">
+              <VideoPlayer 
+                src={video.videoUrl} 
+                isActive={activeIndex === index} 
+              />
+              <div className="absolute inset-0 glass-overlay pointer-events-none" />
+              
+              <EngagementBar 
+                videoId={video.id}
+                likes={video.likesCount || 0} 
+                comments={0} 
+                shares={0}
+                uploaderId={video.uploaderId}
+              />
+              
+              <VideoInfo 
+                username={video.uploaderId.substring(0, 8)} 
+                title={video.title} 
+                hashtags={video.hashtags || []} 
+              />
+            </div>
+          ))
+        ) : (
+          <div className="h-full w-full flex items-center justify-center p-8 text-center">
+            <div>
+              <p className="text-xl font-bold mb-2">No videos yet!</p>
+              <p className="text-muted-foreground">Be the first to upload one by clicking the + button.</p>
+            </div>
           </div>
-        ))}
+        )}
       </div>
 
       <Navigation />

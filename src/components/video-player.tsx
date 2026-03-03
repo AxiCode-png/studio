@@ -17,10 +17,13 @@ export function VideoPlayer({ src, isActive, className }: VideoPlayerProps) {
 
   useEffect(() => {
     if (isActive) {
-      videoRef.current?.play().catch(() => {
-        // Handle auto-play restriction
-        setIsPlaying(false);
-      });
+      const playPromise = videoRef.current?.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Auto-play might be blocked until user interaction
+          setIsPlaying(false);
+        });
+      }
       setIsPlaying(true);
     } else {
       videoRef.current?.pause();
@@ -65,7 +68,7 @@ export function VideoPlayer({ src, isActive, className }: VideoPlayerProps) {
 
       <button 
         onClick={toggleMute}
-        className="absolute bottom-24 right-4 p-2 rounded-full bg-black/40 text-white backdrop-blur-sm z-10"
+        className="absolute bottom-24 right-4 p-2 rounded-full bg-black/40 text-white backdrop-blur-sm z-10 hover:bg-black/60 transition-colors pointer-events-auto"
       >
         {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
       </button>
