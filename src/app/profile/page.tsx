@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Navigation } from '@/components/navigation';
 import { Grid, Lock, Bookmark, Heart, LogOut } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, signOut } from 'firebase/auth';
-import { useAuth } from '@/firebase';
+import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { doc } from 'firebase/firestore';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
-  const { auth } = useAuth() as any;
+  const auth = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -31,8 +31,12 @@ export default function ProfilePage() {
   const { data: profile } = useDoc(userDocRef);
 
   const handleLogout = async () => {
-    await auth.signOut();
-    router.push('/auth');
+    try {
+      await signOut(auth);
+      router.push('/auth');
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
   };
 
   if (isUserLoading || !user) return null;
@@ -48,35 +52,35 @@ export default function ProfilePage() {
         </div>
 
         <h2 className="text-xl font-headline font-bold mb-1">
-          {profile ? `${profile.firstName} ${profile.lastName}` : 'Loading...'}
+          {profile ? `${profile.firstName} ${profile.lastName}` : 'جاري التحميل...'}
         </h2>
         <p className="text-muted-foreground text-sm mb-4">
           {profile ? `@${profile.firstName.toLowerCase()}${profile.lastName.toLowerCase()}` : '@user'} 
-          {profile?.age ? ` • ${profile.age} years old` : ''}
+          {profile?.age ? ` • ${profile.age} سنة` : ''}
         </p>
 
         <div className="flex gap-8 mb-6">
           <div className="text-center">
             <p className="font-bold text-lg">124</p>
-            <p className="text-xs text-muted-foreground">Following</p>
+            <p className="text-xs text-muted-foreground">متابعة</p>
           </div>
           <div className="text-center">
             <p className="font-bold text-lg">1.5K</p>
-            <p className="text-xs text-muted-foreground">Followers</p>
+            <p className="text-xs text-muted-foreground">متابعون</p>
           </div>
           <div className="text-center">
             <p className="font-bold text-lg">10.2K</p>
-            <p className="text-xs text-muted-foreground">Likes</p>
+            <p className="text-xs text-muted-foreground">إعجابات</p>
           </div>
         </div>
 
         <div className="flex flex-col gap-2 w-full max-w-sm mb-8">
           <div className="flex gap-3">
-            <Button className="flex-1 bg-primary text-background font-bold">Edit Profile</Button>
-            <Button variant="outline" className="flex-1 border-muted font-bold text-foreground">Share Profile</Button>
+            <Button className="flex-1 bg-primary text-background font-bold">تعديل الملف</Button>
+            <Button variant="outline" className="flex-1 border-muted font-bold text-foreground">مشاركة</Button>
           </div>
           <Button variant="ghost" className="text-destructive font-bold flex items-center gap-2" onClick={handleLogout}>
-            <LogOut size={16} /> Logout
+            <LogOut size={16} /> تسجيل الخروج
           </Button>
         </div>
 
