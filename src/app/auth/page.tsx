@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -10,11 +11,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, Mail, Lock, Cake } from 'lucide-react';
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { auth } = useAuth() as any; // Cast to bypass strict type check if needed, but initializeFirebase returns auth
+  const { auth } = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
@@ -33,6 +34,10 @@ export default function AuthPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.email.endsWith("@gmail.com")) {
+      toast({ title: "الرجاء استخدام Gmail فقط!", variant: "destructive" });
+      return;
+    }
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
@@ -42,19 +47,19 @@ export default function AuthPage() {
         displayName: `${formData.firstName} ${formData.lastName}`
       });
 
-      // Create UserProfile document in Firestore
       await setDoc(doc(db, 'users', user.uid), {
         id: user.uid,
         firstName: formData.firstName,
         lastName: formData.lastName,
         age: parseInt(formData.age),
-        email: formData.email
+        email: formData.email,
+        joinedAt: new Date().toISOString()
       });
 
-      toast({ title: "Account created successfully!" });
+      toast({ title: "تم إنشاء الحساب بنجاح! 🔥" });
       router.push('/');
     } catch (error: any) {
-      toast({ title: "Auth Error", description: error.message, variant: "destructive" });
+      toast({ title: "خطأ في التسجيل", description: error.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -65,99 +70,118 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      toast({ title: "Welcome back!" });
+      toast({ title: "مرحباً بك مجدداً في AXI!" });
       router.push('/');
     } catch (error: any) {
-      toast({ title: "Login Error", description: error.message, variant: "destructive" });
+      toast({ title: "خطأ في الدخول", description: error.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md border-border bg-card">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-headline text-primary">AXI Shorts</CardTitle>
-          <CardDescription>Join the future of short videos</CardDescription>
+    <main className="min-h-screen flex items-center justify-center p-4 bg-[#0A0A0A]">
+      <Card className="w-full max-w-md border-primary/20 bg-card/80 backdrop-blur-xl shadow-[0_0_50px_rgba(0,229,255,0.1)]">
+        <CardHeader className="text-center space-y-1">
+          <CardTitle className="text-5xl font-headline font-bold text-primary tracking-tighter">AXI</CardTitle>
+          <CardDescription className="text-white/50 tracking-[0.2em] font-bold text-xs">PRO MAX</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/20">
+              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-black">تسجيل دخول</TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-black">حساب جديد</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 text-primary size-5" />
                   <Input 
                     type="email" 
                     name="email" 
-                    placeholder="Email" 
+                    placeholder="الجيميل (@gmail.com)" 
                     required 
                     onChange={handleInputChange}
-                    className="bg-muted/50 border-none"
+                    className="pl-11 bg-white/5 border-none h-12"
                   />
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 text-primary size-5" />
                   <Input 
                     type="password" 
                     name="password" 
-                    placeholder="Password" 
+                    placeholder="كلمة السر" 
                     required 
                     onChange={handleInputChange}
-                    className="bg-muted/50 border-none"
+                    className="pl-11 bg-white/5 border-none h-12"
                   />
                 </div>
-                <Button className="w-full font-bold" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : "Login"}
+                <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)]" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "دخول إلى عالم AXI"}
                 </Button>
               </form>
             </TabsContent>
 
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 text-primary size-4" />
+                    <Input 
+                      name="firstName" 
+                      placeholder="الاسم" 
+                      required 
+                      onChange={handleInputChange}
+                      className="pl-10 bg-white/5 border-none h-11 text-sm"
+                    />
+                  </div>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 text-primary size-4" />
+                    <Input 
+                      name="lastName" 
+                      placeholder="اللقب" 
+                      required 
+                      onChange={handleInputChange}
+                      className="pl-10 bg-white/5 border-none h-11 text-sm"
+                    />
+                  </div>
+                </div>
+                <div className="relative">
+                  <Cake className="absolute left-3 top-3 text-primary size-5" />
                   <Input 
-                    name="firstName" 
-                    placeholder="First Name" 
+                    type="number" 
+                    name="age" 
+                    placeholder="العمر" 
                     required 
                     onChange={handleInputChange}
-                    className="bg-muted/50 border-none"
-                  />
-                  <Input 
-                    name="lastName" 
-                    placeholder="Last Name" 
-                    required 
-                    onChange={handleInputChange}
-                    className="bg-muted/50 border-none"
+                    className="pl-11 bg-white/5 border-none h-12"
                   />
                 </div>
-                <Input 
-                  type="number" 
-                  name="age" 
-                  placeholder="Age" 
-                  required 
-                  onChange={handleInputChange}
-                  className="bg-muted/50 border-none"
-                />
-                <Input 
-                  type="email" 
-                  name="email" 
-                  placeholder="Email" 
-                  required 
-                  onChange={handleInputChange}
-                  className="bg-muted/50 border-none"
-                />
-                <Input 
-                  type="password" 
-                  name="password" 
-                  placeholder="Password" 
-                  required 
-                  onChange={handleInputChange}
-                  className="bg-muted/50 border-none"
-                />
-                <Button className="w-full font-bold" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : "Create Account"}
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 text-primary size-5" />
+                  <Input 
+                    type="email" 
+                    name="email" 
+                    placeholder="الجيميل (@gmail.com)" 
+                    required 
+                    onChange={handleInputChange}
+                    className="pl-11 bg-white/5 border-none h-12"
+                  />
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 text-primary size-5" />
+                  <Input 
+                    type="password" 
+                    name="password" 
+                    placeholder="كلمة السر" 
+                    required 
+                    onChange={handleInputChange}
+                    className="pl-11 bg-white/5 border-none h-12"
+                  />
+                </div>
+                <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)]" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "إنضم الآن"}
                 </Button>
               </form>
             </TabsContent>

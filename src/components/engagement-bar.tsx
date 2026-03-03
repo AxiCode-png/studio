@@ -1,22 +1,26 @@
+
 "use client";
 
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Download, MoreHorizontal, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useFirestore, useDoc, useMemoFirebase, updateDocumentNonBlocking } from '@/firebase';
 import { doc, increment } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 interface EngagementBarProps {
   videoId: string;
+  videoUrl: string;
   likes: number;
   comments: number;
   shares: number;
   uploaderId: string;
 }
 
-export function EngagementBar({ videoId, likes, comments, shares, uploaderId }: EngagementBarProps) {
+export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uploaderId }: EngagementBarProps) {
   const [isLiked, setIsLiked] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const db = useFirestore();
 
   const userDocRef = useMemoFirebase(() => doc(db, 'users', uploaderId), [db, uploaderId]);
@@ -29,6 +33,27 @@ export function EngagementBar({ videoId, likes, comments, shares, uploaderId }: 
     updateDocumentNonBlocking(videoRef, {
       likesCount: increment(isLiked ? -1 : 1)
     });
+  };
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `AXI_Pro_Max_${videoId}.mp4`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast({ title: "تم بدء تحميل الفيديو! ✅" });
+    } catch (error) {
+      toast({ title: "فشل التحميل", description: "قد تحتاج للسماح بالوصول للملفات", variant: "destructive" });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -48,8 +73,8 @@ export function EngagementBar({ videoId, likes, comments, shares, uploaderId }: 
           <Heart 
             size={32} 
             className={cn(
-              "text-white transition-colors",
-              isLiked ? "fill-red-500 text-red-500" : "fill-none"
+              "text-white transition-colors drop-shadow-lg",
+              isLiked ? "fill-[#FF0050] text-[#FF0050]" : "fill-none"
             )} 
           />
         </div>
@@ -60,21 +85,31 @@ export function EngagementBar({ videoId, likes, comments, shares, uploaderId }: 
 
       <button className="flex flex-col items-center group">
         <div className="p-2 rounded-full transition-colors">
-          <MessageCircle size={32} className="text-white" />
+          <MessageCircle size={32} className="text-white drop-shadow-lg" />
         </div>
         <span className="text-white text-xs font-semibold drop-shadow-md">{comments}</span>
       </button>
 
-      <button className="flex flex-col items-center group">
+      <button onClick={handleDownload} disabled={isDownloading} className="flex flex-col items-center group">
         <div className="p-2 rounded-full transition-colors">
-          <Share2 size={32} className="text-white" />
+          {isDownloading ? (
+            <Loader2 size={32} className="text-primary animate-spin" />
+          ) : (
+            <Download size={32} className="text-white drop-shadow-lg" />
+          )}
         </div>
-        <span className="text-white text-xs font-semibold drop-shadow-md">{shares}</span>
+        <span className="text-white text-[10px] font-bold drop-shadow-md">حفظ</span>
       </button>
 
       <button className="flex flex-col items-center group">
         <div className="p-2 rounded-full transition-colors">
-          <MoreHorizontal size={32} className="text-white" />
+          <Share2 size={32} className="text-white drop-shadow-lg" />
+        </div>
+      </button>
+
+      <button className="flex flex-col items-center group">
+        <div className="p-2 rounded-full transition-colors">
+          <MoreHorizontal size={32} className="text-white drop-shadow-lg" />
         </div>
       </button>
     </div>

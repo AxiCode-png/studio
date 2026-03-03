@@ -1,29 +1,30 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 187 18% 10%;
+    --background: 240 10% 4%;
     --foreground: 182 10% 98%;
-    --card: 187 18% 12%;
+    --card: 240 10% 6%;
     --card-foreground: 182 10% 98%;
-    --popover: 187 18% 8%;
+    --popover: 240 10% 4%;
     --popover-foreground: 182 10% 98%;
-    --primary: 182 100% 51%;
-    --primary-foreground: 187 18% 10%;
-    --secondary: 187 10% 20%;
+    --primary: 182 100% 50%; /* Neon Blue */
+    --primary-foreground: 240 10% 4%;
+    --secondary: 260 100% 60%; /* Deep Purple */
     --secondary-foreground: 182 10% 98%;
-    --muted: 187 10% 15%;
-    --muted-foreground: 182 5% 65%;
-    --accent: 150 100% 40%;
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 182 100% 50%;
     --accent-foreground: 182 10% 98%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 182 10% 98%;
-    --border: 187 15% 20%;
-    --input: 187 15% 20%;
-    --ring: 182 100% 51%;
-    --radius: 1rem;
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
+    --ring: 182 100% 50%;
+    --radius: 1.25rem;
   }
 }
 
@@ -57,5 +58,13 @@
 }
 
 .glass-overlay {
-  background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.4) 100%);
+  background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.5) 100%);
+}
+
+.neon-border {
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+}
+
+.neon-text {
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
 }

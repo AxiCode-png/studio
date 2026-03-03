@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -17,7 +18,6 @@ export default function Home() {
   const db = useFirestore();
   const router = useRouter();
 
-  // Redirect to auth if not logged in
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/auth');
@@ -25,7 +25,7 @@ export default function Home() {
   }, [user, isUserLoading, router]);
 
   const videosQuery = useMemoFirebase(() => {
-    return query(collection(db, 'videos'), orderBy('uploadTimestamp', 'desc'), limit(10));
+    return query(collection(db, 'videos'), orderBy('uploadTimestamp', 'desc'), limit(20));
   }, [db]);
 
   const { data: videos, isLoading: isVideosLoading } = useCollection(videosQuery);
@@ -46,19 +46,23 @@ export default function Home() {
 
   if (isUserLoading || isVideosLoading) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-background gap-4">
-        <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        <p className="text-muted-foreground font-headline font-bold">Loading AXI Feed...</p>
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-[#0A0A0A] gap-4">
+        <div className="relative">
+          <div className="absolute inset-0 bg-primary blur-2xl opacity-20 animate-pulse"></div>
+          <Loader2 className="w-16 h-16 text-primary animate-spin relative z-10" />
+        </div>
+        <p className="text-primary font-headline font-bold text-xl tracking-widest animate-pulse">AXI PRO MAX</p>
       </div>
     );
   }
 
   return (
-    <main className="relative h-screen w-full bg-background overflow-hidden">
-      <div className="fixed top-0 left-0 right-0 h-16 flex items-center justify-center z-50 pointer-events-none">
-        <div className="flex gap-6 pointer-events-auto">
-          <button className="text-white font-headline font-bold text-lg opacity-60">Following</button>
-          <button className="text-white font-headline font-bold text-lg border-b-2 border-primary pb-1">For You</button>
+    <main className="relative h-screen w-full bg-black overflow-hidden">
+      {/* Header Overlay */}
+      <div className="fixed top-0 left-0 right-0 h-20 flex items-center justify-center z-50 pointer-events-none bg-gradient-to-b from-black/80 to-transparent">
+        <div className="flex gap-8 pointer-events-auto">
+          <button className="text-white font-headline font-bold text-lg opacity-40 hover:opacity-100 transition-opacity">متابعة</button>
+          <button className="text-white font-headline font-bold text-lg border-b-4 border-primary pb-1 shadow-[0_4px_10px_rgba(0,229,255,0.5)]">لك</button>
         </div>
       </div>
 
@@ -74,6 +78,7 @@ export default function Home() {
               
               <EngagementBar 
                 videoId={video.id}
+                videoUrl={video.videoUrl}
                 likes={video.likesCount || 0} 
                 comments={0} 
                 shares={0}
@@ -88,10 +93,10 @@ export default function Home() {
             </div>
           ))
         ) : (
-          <div className="h-full w-full flex items-center justify-center p-8 text-center">
-            <div>
-              <p className="text-xl font-bold mb-2">No videos yet!</p>
-              <p className="text-muted-foreground">Be the first to upload one by clicking the + button.</p>
+          <div className="h-full w-full flex items-center justify-center p-8 text-center bg-[#0A0A0A]">
+            <div className="space-y-4">
+              <p className="text-3xl font-headline font-bold text-primary">كن الأول في العالم!</p>
+              <p className="text-muted-foreground">انشر أول فيديو حصري على AXI PRO MAX الآن.</p>
             </div>
           </div>
         )}
