@@ -40,7 +40,7 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
     setIsDownloading(true);
     
     try {
-      // محاولة التحميل السريع عبر Fetch
+      toast({ title: "جاري بدء التحميل السريع..." });
       const response = await fetch(videoUrl);
       if (!response.ok) throw new Error("فشل الوصول للملف");
       
@@ -48,19 +48,18 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `AXI_Video_${videoId}.mp4`;
+      link.download = `AXI_ProMax_${videoId}.mp4`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      toast({ title: "✅ بدأ التحميل الآن!" });
+      toast({ title: "✅ تم التحميل بنجاح!" });
     } catch (error) {
-      // فتح في نافذة جديدة كحل بديل سريع
       window.open(videoUrl, '_blank');
       toast({ 
         title: "جاري التحميل عبر المتصفح", 
-        description: "إذا لم يبدأ تلقائياً، اضغط مطولاً على الفيديو واختر حفظ.",
+        description: "إذا لم يبدأ، اضغط مطولاً على الفيديو واختر حفظ.",
       });
     } finally {
       setIsDownloading(false);

@@ -7,7 +7,7 @@ import { updateProfile } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, User, Mail, Lock, Cake } from 'lucide-react';
@@ -47,14 +47,13 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       initiateEmailSignUp(auth, formData.email, formData.password);
-      toast({ title: "جاري إنشاء حسابك في AXI..." });
+      toast({ title: "جاري إنشاء حسابك في AXI PRO MAX..." });
     } catch (error) {
       toast({ title: "حدث خطأ أثناء التسجيل", variant: "destructive" });
       setIsLoading(false);
     }
   };
 
-  // إنشاء الملف الشخصي فور نجاح التسجيل
   useEffect(() => {
     if (user && formData.firstName && !isUserLoading) {
       const userRef = doc(db, 'users', user.uid);
@@ -78,13 +77,12 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       initiateEmailSignIn(auth, formData.email, formData.password);
-      toast({ title: "جاري الدخول إلى AXI..." });
+      toast({ title: "جاري الدخول إلى عالم AXI..." });
     } catch (error) {
       toast({ title: "فشل تسجيل الدخول", variant: "destructive" });
       setIsLoading(false);
     }
-    // إعادة تعيين حالة التحميل تلقائياً في حال لم يحدث توجيه خلال 5 ثوانٍ
-    setTimeout(() => setIsLoading(false), 5000);
+    setTimeout(() => setIsLoading(false), 3000);
   };
 
   return (
