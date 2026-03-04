@@ -47,13 +47,14 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       initiateEmailSignUp(auth, formData.email, formData.password);
-      toast({ title: "جاري إنشاء الحساب..." });
+      toast({ title: "جاري إنشاء الحساب في AXI..." });
     } catch (error) {
       toast({ title: "فشل إنشاء الحساب", variant: "destructive" });
       setIsLoading(false);
     }
   };
 
+  // مراقبة نجاح التسجيل لإنشاء البروفايل
   useEffect(() => {
     if (user && formData.firstName && !isUserLoading) {
       const userRef = doc(db, 'users', user.uid);
@@ -77,7 +78,7 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       initiateEmailSignIn(auth, formData.email, formData.password);
-      toast({ title: "جاري الدخول إلى AXI..." });
+      toast({ title: "جاري الدخول إلى عالم AXI..." });
     } catch (error) {
       toast({ title: "خطأ في الدخول", variant: "destructive" });
     }
@@ -88,7 +89,7 @@ export default function AuthPage() {
     <main className="min-h-screen flex items-center justify-center p-4 bg-[#0A0A0A]">
       <Card className="w-full max-w-md border-primary/20 bg-card/80 backdrop-blur-xl shadow-[0_0_50px_rgba(0,229,255,0.1)]">
         <CardHeader className="text-center space-y-1">
-          <CardTitle className="text-5xl font-headline font-bold text-primary tracking-tighter">AXI</CardTitle>
+          <CardTitle className="text-5xl font-headline font-bold text-primary tracking-tighter neon-text">AXI</CardTitle>
           <CardDescription className="text-white/50 tracking-[0.2em] font-bold text-xs uppercase">Pro Max Edition</CardDescription>
         </CardHeader>
         <CardContent>
@@ -108,7 +109,7 @@ export default function AuthPage() {
                     placeholder="الجيميل (@gmail.com)" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white"
+                    className="pl-11 bg-white/5 border-none h-12 text-white placeholder:text-white/30"
                   />
                 </div>
                 <div className="relative">
@@ -119,7 +120,7 @@ export default function AuthPage() {
                     placeholder="كلمة السر" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white"
+                    className="pl-11 bg-white/5 border-none h-12 text-white placeholder:text-white/30"
                   />
                 </div>
                 <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all active:scale-95" disabled={isLoading}>
@@ -138,7 +139,7 @@ export default function AuthPage() {
                       placeholder="الاسم" 
                       required 
                       onChange={handleInputChange}
-                      className="pl-10 bg-white/5 border-none h-11 text-sm text-white"
+                      className="pl-10 bg-white/5 border-none h-11 text-sm text-white placeholder:text-white/30"
                     />
                   </div>
                   <div className="relative">
@@ -148,7 +149,7 @@ export default function AuthPage() {
                       placeholder="اللقب" 
                       required 
                       onChange={handleInputChange}
-                      className="pl-10 bg-white/5 border-none h-11 text-sm text-white"
+                      className="pl-10 bg-white/5 border-none h-11 text-sm text-white placeholder:text-white/30"
                     />
                   </div>
                 </div>
@@ -160,7 +161,7 @@ export default function AuthPage() {
                     placeholder="العمر" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white"
+                    className="pl-11 bg-white/5 border-none h-12 text-white placeholder:text-white/30"
                   />
                 </div>
                 <div className="relative">
@@ -171,7 +172,7 @@ export default function AuthPage() {
                     placeholder="الجيميل (@gmail.com)" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white"
+                    className="pl-11 bg-white/5 border-none h-12 text-white placeholder:text-white/30"
                   />
                 </div>
                 <div className="relative">
@@ -182,7 +183,7 @@ export default function AuthPage() {
                     placeholder="كلمة السر" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white"
+                    className="pl-11 bg-white/5 border-none h-12 text-white placeholder:text-white/30"
                   />
                 </div>
                 <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all active:scale-95" disabled={isLoading}>

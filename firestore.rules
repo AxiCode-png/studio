@@ -10,6 +10,7 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
+      // السماح للجميع بقراءة البروفايل لعرض الأسماء في الفيديوهات
       allow get: if true;
       allow list: if isSignedIn();
       allow create, update: if isOwner(userId);

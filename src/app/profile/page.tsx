@@ -54,10 +54,16 @@ export default function ProfilePage() {
         <h2 className="text-xl font-headline font-bold mb-1">
           {profile ? `${profile.firstName} ${profile.lastName}` : 'جاري التحميل...'}
         </h2>
-        <p className="text-muted-foreground text-sm mb-4">
-          {profile ? `@${profile.firstName.toLowerCase()}${profile.lastName.toLowerCase()}` : '@user'} 
-          {profile?.age ? ` • ${profile.age} سنة` : ''}
-        </p>
+        <div className="flex items-center gap-2 mb-4">
+          <p className="text-muted-foreground text-sm">
+            {profile ? `@${profile.firstName.toLowerCase()}${profile.lastName.toLowerCase()}` : '@user'} 
+          </p>
+          {profile?.age && (
+            <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">
+              {profile.age} سنة
+            </span>
+          )}
+        </div>
 
         <div className="flex gap-8 mb-6">
           <div className="text-center">
@@ -80,7 +86,7 @@ export default function ProfilePage() {
             <Button variant="outline" className="flex-1 border-muted font-bold text-foreground">مشاركة</Button>
           </div>
           <Button variant="ghost" className="text-destructive font-bold flex items-center gap-2" onClick={handleLogout}>
-            <LogOut size={16} /> تسجيل الخروج
+            <LogOut size={16} /> تسجيل الخروج من AXI
           </Button>
         </div>
 

@@ -53,6 +53,7 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
       
       toast({ title: "تم بدء تحميل الفيديو بنجاح! ✅" });
     } catch (error) {
+      // Fallback: Open in new tab
       window.open(videoUrl, '_blank');
       toast({ 
         title: "جاري فتح الفيديو للحفظ", 
