@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -36,28 +37,31 @@ export function EngagementBar({ videoId, videoUrl, likes, comments, shares, uplo
   };
 
   const handleDownload = async () => {
+    if (isDownloading) return;
     setIsDownloading(true);
+    
     try {
-      const response = await fetch(videoUrl, { mode: 'cors' });
-      if (!response.ok) throw new Error("CORS or Network Error");
+      // محاولة التحميل السريع عبر Fetch
+      const response = await fetch(videoUrl);
+      if (!response.ok) throw new Error("فشل الوصول للملف");
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `AXI_Pro_Max_${videoId}.mp4`);
+      link.download = `AXI_Video_${videoId}.mp4`;
       document.body.appendChild(link);
       link.click();
-      link.parentNode?.removeChild(link);
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      toast({ title: "تم بدء تحميل الفيديو بنجاح! ✅" });
+      toast({ title: "✅ بدأ التحميل الآن!" });
     } catch (error) {
-      // Fallback: Open in new tab
+      // فتح في نافذة جديدة كحل بديل سريع
       window.open(videoUrl, '_blank');
       toast({ 
-        title: "جاري فتح الفيديو للحفظ", 
-        description: "اضغط مطولاً على الفيديو واختر 'حفظ الفيديو' إذا لم يبدأ تلقائياً.",
+        title: "جاري التحميل عبر المتصفح", 
+        description: "إذا لم يبدأ تلقائياً، اضغط مطولاً على الفيديو واختر حفظ.",
       });
     } finally {
       setIsDownloading(false);

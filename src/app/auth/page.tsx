@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -47,14 +48,14 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       initiateEmailSignUp(auth, formData.email, formData.password);
-      toast({ title: "جاري إنشاء الحساب في AXI..." });
+      toast({ title: "جاري إنشاء حسابك في AXI..." });
     } catch (error) {
-      toast({ title: "فشل إنشاء الحساب", variant: "destructive" });
+      toast({ title: "حدث خطأ أثناء التسجيل", variant: "destructive" });
       setIsLoading(false);
     }
   };
 
-  // مراقبة نجاح التسجيل لإنشاء البروفايل
+  // إنشاء الملف الشخصي فور نجاح التسجيل
   useEffect(() => {
     if (user && formData.firstName && !isUserLoading) {
       const userRef = doc(db, 'users', user.uid);
@@ -69,7 +70,7 @@ export default function AuthPage() {
       
       updateProfile(user, {
         displayName: `${formData.firstName} ${formData.lastName}`
-      }).catch(console.error);
+      }).catch(() => {});
     }
   }, [user, db, formData.firstName, isUserLoading]);
 
@@ -78,11 +79,13 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       initiateEmailSignIn(auth, formData.email, formData.password);
-      toast({ title: "جاري الدخول إلى عالم AXI..." });
+      toast({ title: "جاري الدخول إلى AXI..." });
     } catch (error) {
-      toast({ title: "خطأ في الدخول", variant: "destructive" });
+      toast({ title: "فشل تسجيل الدخول", variant: "destructive" });
+      setIsLoading(false);
     }
-    setTimeout(() => setIsLoading(false), 3000);
+    // إعادة تعيين حالة التحميل تلقائياً في حال لم يحدث توجيه خلال 5 ثوانٍ
+    setTimeout(() => setIsLoading(false), 5000);
   };
 
   return (
