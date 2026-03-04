@@ -55,7 +55,7 @@ export default function AuthPage() {
   };
 
   useEffect(() => {
-    if (user && formData.firstName && !isUserLoading) {
+    if (user && formData.firstName && !isUserLoading && db) {
       const userRef = doc(db, 'users', user.uid);
       setDocumentNonBlocking(userRef, {
         id: user.uid,
@@ -70,7 +70,7 @@ export default function AuthPage() {
         displayName: `${formData.firstName} ${formData.lastName}`
       }).catch(() => {});
     }
-  }, [user, db, formData.firstName, isUserLoading]);
+  }, [user, db, formData.firstName, isUserLoading, formData.lastName, formData.age, formData.email]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

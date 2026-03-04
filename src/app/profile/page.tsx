@@ -24,7 +24,7 @@ export default function ProfilePage() {
   }, [user, isUserLoading, router]);
 
   const userDocRef = useMemoFirebase(() => {
-    if (!user) return null;
+    if (!user || !db) return null;
     return doc(db, 'users', user.uid);
   }, [db, user]);
 
@@ -51,12 +51,12 @@ export default function ProfilePage() {
           </Avatar>
         </div>
 
-        <h2 className="text-xl font-headline font-bold mb-1">
+        <h2 className="text-xl font-headline font-bold mb-1 text-white">
           {profile ? `${profile.firstName} ${profile.lastName}` : 'جاري التحميل...'}
         </h2>
         <div className="flex items-center gap-2 mb-4">
           <p className="text-muted-foreground text-sm">
-            {profile ? `@${profile.firstName.toLowerCase()}${profile.lastName.toLowerCase()}` : '@user'} 
+            {profile ? `@${profile.firstName?.toLowerCase()}${profile.lastName?.toLowerCase()}` : '@user'} 
           </p>
           {profile?.age && (
             <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">
@@ -65,7 +65,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        <div className="flex gap-8 mb-6">
+        <div className="flex gap-8 mb-6 text-white">
           <div className="text-center">
             <p className="font-bold text-lg">124</p>
             <p className="text-xs text-muted-foreground">متابعة</p>
@@ -82,20 +82,20 @@ export default function ProfilePage() {
 
         <div className="flex flex-col gap-2 w-full max-w-sm mb-8">
           <div className="flex gap-3">
-            <Button className="flex-1 bg-primary text-background font-bold">تعديل الملف</Button>
+            <Button className="flex-1 bg-primary text-background font-bold hover:bg-primary/80 transition-all">تعديل الملف</Button>
             <Button variant="outline" className="flex-1 border-muted font-bold text-foreground">مشاركة</Button>
           </div>
-          <Button variant="ghost" className="text-destructive font-bold flex items-center gap-2" onClick={handleLogout}>
+          <Button variant="ghost" className="text-destructive font-bold flex items-center gap-2 hover:bg-destructive/10" onClick={handleLogout}>
             <LogOut size={16} /> تسجيل الخروج من AXI
           </Button>
         </div>
 
         <Tabs defaultValue="videos" className="w-full">
           <TabsList className="w-full bg-transparent border-b border-muted rounded-none h-12">
-            <TabsTrigger value="videos" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none"><Grid size={20} /></TabsTrigger>
-            <TabsTrigger value="likes" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none"><Heart size={20} /></TabsTrigger>
-            <TabsTrigger value="bookmarks" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none"><Bookmark size={20} /></TabsTrigger>
-            <TabsTrigger value="private" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none"><Lock size={20} /></TabsTrigger>
+            <TabsTrigger value="videos" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none"><Grid size={20} className="text-white" /></TabsTrigger>
+            <TabsTrigger value="likes" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none"><Heart size={20} className="text-white" /></TabsTrigger>
+            <TabsTrigger value="bookmarks" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none"><Bookmark size={20} className="text-white" /></TabsTrigger>
+            <TabsTrigger value="private" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none"><Lock size={20} className="text-white" /></TabsTrigger>
           </TabsList>
           
           <TabsContent value="videos" className="mt-1">
