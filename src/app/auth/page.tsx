@@ -44,6 +44,7 @@ export default function AuthPage() {
       toast({ title: "الرجاء استخدام Gmail فقط!", variant: "destructive" });
       return;
     }
+    if (!auth) return;
     setIsLoading(true);
     try {
       initiateEmailSignUp(auth, formData.email, formData.password);
@@ -56,6 +57,7 @@ export default function AuthPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     setIsLoading(true);
     try {
       initiateEmailSignIn(auth, formData.email, formData.password);

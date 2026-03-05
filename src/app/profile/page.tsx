@@ -31,6 +31,7 @@ export default function ProfilePage() {
   const { data: profile } = useDoc(userDocRef);
 
   const handleLogout = async () => {
+    if (!auth) return;
     try {
       await signOut(auth);
       router.push('/auth');

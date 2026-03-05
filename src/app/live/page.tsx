@@ -16,10 +16,8 @@ import {
   Share2, 
   Send, 
   Radio, 
-  Loader2,
-  Camera
+  Loader2
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export default function LivePage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -52,7 +50,7 @@ export default function LivePage() {
         toast({
           variant: 'destructive',
           title: 'فشل الوصول للكاميرا',
-          description: 'يرجى تفعيل صلاحيات الكاميرا من إعدادات المتصفح لبدء البث.',
+          description: 'يرجى تفعيل صلاحيات الكاميرا لبدء البث المباشر.',
         });
       }
     };
@@ -88,7 +86,6 @@ export default function LivePage() {
 
   return (
     <main className="relative h-screen w-full bg-black overflow-hidden flex flex-col">
-      {/* Video Background */}
       <div className="absolute inset-0 z-0">
         <video 
           ref={videoRef} 
@@ -100,7 +97,6 @@ export default function LivePage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" />
       </div>
 
-      {/* Header Info */}
       <div className="relative z-10 p-4 flex justify-between items-start">
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -115,7 +111,7 @@ export default function LivePage() {
             )}
           </div>
           <div>
-            <h4 className="text-white text-sm font-bold drop-shadow-md">@{user?.displayName?.replace(' ', '_').toLowerCase()}</h4>
+            <h4 className="text-white text-sm font-bold drop-shadow-md">@{user?.displayName?.replace(' ', '_').toLowerCase() || 'user'}</h4>
             <div className="flex items-center gap-1 text-primary text-[10px] font-bold">
               <Users size={12} /> {viewers} مشاهد
             </div>
@@ -138,36 +134,33 @@ export default function LivePage() {
         </button>
       </div>
 
-      {/* Permissions Check */}
       {hasCameraPermission === false && (
         <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/90 text-center">
           <Alert variant="destructive" className="max-w-xs border-primary/50 bg-black/50 backdrop-blur-xl">
             <Radio className="h-6 w-6 text-primary animate-pulse mb-2 mx-auto" />
             <AlertTitle className="text-primary font-headline text-lg">مطلوب إذن الكاميرا</AlertTitle>
             <AlertDescription className="text-white/70">
-              يرجى السماح بالوصول للكاميرا والميكروفون في متصفحك لتتمكن من بدء البث المباشر على AXI PRO MAX.
+              يرجى السماح بالوصول للكاميرا والميكروفون في متصفحك لتتمكن من بدء البث المباشر.
             </AlertDescription>
           </Alert>
         </div>
       )}
 
-      {/* Comments Area (Bottom) */}
       <div className="mt-auto relative z-10 p-4 space-y-4">
-        <div className="h-48 overflow-y-auto scrollbar-hide flex flex-col gap-2 mask-linear-top">
+        <div className="h-48 overflow-y-auto flex flex-col gap-2">
           {comments.map((c) => (
-            <div key={c.id} className="flex items-start gap-2 animate-in slide-in-from-left duration-300">
+            <div key={c.id} className="flex items-start gap-2">
               <span className="text-primary/80 font-bold text-xs shrink-0">{c.user}:</span>
               <span className="text-white text-xs drop-shadow-md bg-black/20 px-2 py-1 rounded-lg">{c.text}</span>
             </div>
           ))}
         </div>
 
-        {/* Input & Actions */}
         <div className="flex items-center gap-3">
           <form onSubmit={handleSendComment} className="flex-1 relative">
             <Input 
               placeholder="قل شيئاً..." 
-              className="bg-white/10 border-none rounded-full h-11 pr-12 text-white placeholder:text-white/40 focus-visible:ring-1 focus-visible:ring-primary"
+              className="bg-white/10 border-none rounded-full h-11 pr-12 text-white placeholder:text-white/40"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
             />
@@ -178,7 +171,7 @@ export default function LivePage() {
           
           <div className="flex gap-2">
             <button className="bg-white/10 p-3 rounded-full text-white active:scale-125 transition-transform">
-              <Heart size={24} className="fill-none hover:fill-destructive hover:text-destructive" />
+              <Heart size={24} className="hover:fill-destructive hover:text-destructive" />
             </button>
             <button className="bg-white/10 p-3 rounded-full text-white">
               <Share2 size={24} />
@@ -187,7 +180,6 @@ export default function LivePage() {
         </div>
       </div>
 
-      {/* Live Badge Effect */}
       {isLive && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-20">
           <div className="bg-destructive/90 text-white px-3 py-1 rounded-full text-[10px] font-bold tracking-widest flex items-center gap-2 shadow-[0_0_20px_rgba(255,0,0,0.4)]">
