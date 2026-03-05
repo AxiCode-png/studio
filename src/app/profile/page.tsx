@@ -8,8 +8,8 @@ import { Navigation } from '@/components/navigation';
 import { Grid, Lock, Bookmark, Heart, LogOut } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth'; // التصحيح: استيراد من auth
-import { doc } from 'firebase/firestore'; // التصحيح: استيراد من firestore
+import { signOut } from 'firebase/auth';
+import { doc } from 'firebase/firestore';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();

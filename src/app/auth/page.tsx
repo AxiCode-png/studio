@@ -14,7 +14,7 @@ import { Loader2, User, Mail, Lock, Cake } from 'lucide-react';
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const auth = useAuth(); // التصحيح: استدعاء مباشر للكائن auth
+  const auth = useAuth();
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
