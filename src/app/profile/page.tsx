@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Navigation } from '@/components/navigation';
-import { Grid, Lock, Bookmark, Heart, LogOut } from 'lucide-react';
+import { Grid, Lock, Bookmark, Heart, LogOut, Radio } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -83,7 +83,9 @@ export default function ProfilePage() {
         <div className="flex flex-col gap-2 w-full max-w-sm mb-8">
           <div className="flex gap-3">
             <Button className="flex-1 bg-primary text-background font-bold hover:bg-primary/80 transition-all">تعديل الملف</Button>
-            <Button variant="outline" className="flex-1 border-muted font-bold text-foreground">مشاركة</Button>
+            <Button variant="outline" className="flex-1 border-muted font-bold text-foreground" onClick={() => router.push('/live')}>
+              <Radio size={16} className="mr-2" /> بث مباشر
+            </Button>
           </div>
           <Button variant="ghost" className="text-destructive font-bold flex items-center gap-2 hover:bg-destructive/10" onClick={handleLogout}>
             <LogOut size={16} /> تسجيل الخروج من AXI
