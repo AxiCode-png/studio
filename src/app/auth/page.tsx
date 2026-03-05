@@ -14,7 +14,7 @@ import { Loader2, User, Mail, Lock, Cake } from 'lucide-react';
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const auth = useAuth();
+  const auth = useAuth(); // التصحيح: استدعاء مباشر للكائن auth
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
@@ -54,6 +54,18 @@ export default function AuthPage() {
     }
   };
 
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      initiateEmailSignIn(auth, formData.email, formData.password);
+      toast({ title: "جاري الدخول إلى عالم AXI..." });
+    } catch (error) {
+      toast({ title: "فشل تسجيل الدخول", variant: "destructive" });
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (user && formData.firstName && !isUserLoading && db) {
       const userRef = doc(db, 'users', user.uid);
@@ -71,19 +83,6 @@ export default function AuthPage() {
       }).catch(() => {});
     }
   }, [user, db, formData.firstName, isUserLoading, formData.lastName, formData.age, formData.email]);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      initiateEmailSignIn(auth, formData.email, formData.password);
-      toast({ title: "جاري الدخول إلى عالم AXI..." });
-    } catch (error) {
-      toast({ title: "فشل تسجيل الدخول", variant: "destructive" });
-      setIsLoading(false);
-    }
-    setTimeout(() => setIsLoading(false), 3000);
-  };
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 bg-[#0A0A0A]">
