@@ -80,7 +80,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 w-full max-w-sm mb-8">
+        <div className="flex flex-col gap-2 w-full max-sm mb-8 px-4">
           <div className="flex gap-3">
             <Button className="flex-1 bg-primary text-background font-bold hover:bg-primary/80 transition-all">تعديل الملف</Button>
             <Button variant="outline" className="flex-1 border-muted font-bold text-foreground" onClick={() => router.push('/live')}>
