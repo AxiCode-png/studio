@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview A Genkit flow for generating high-quality short videos using the latest Veo 3 model.
+ * @fileOverview A Genkit flow for generating high-quality short videos using the stable Veo 2.0 model.
  *
- * - generateAIVideo - A function that handles the video generation process with Veo 3.
+ * - generateAIVideo - A function that handles the video generation process.
  * - AIVideoGeneratorInput - The input type for the function.
  * - AIVideoGeneratorOutput - The return type.
  */
@@ -33,12 +33,13 @@ const aiVideoGeneratorFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      // استخدام أحدث نموذج Veo 3.0 لتوليد فيديوهات سينمائية
+      // التغيير لنموذج Veo 2.0 المستقر لحل مشكلة predictLongRunning
       let { operation } = await ai.generate({
-        model: googleAI.model('veo-3.0-generate-preview'),
+        model: googleAI.model('veo-2.0-generate-001'),
         prompt: input.prompt,
         config: {
           aspectRatio: '16:9',
+          durationSeconds: 5,
         },
       });
 

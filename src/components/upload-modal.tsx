@@ -5,10 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Sparkles, Loader2, Upload, Video, FileVideo, CheckCircle2 } from 'lucide-react';
+import { PlusCircle, Sparkles, Loader2, Upload, Video, FileVideo, CheckCircle2, AlertCircle } from 'lucide-react';
 import { generateCaptionAndHashtags } from '@/ai/flows/ai-caption-and-hashtag-generator';
 import { generateAIVideo } from '@/ai/flows/ai-video-generator';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
 
@@ -26,6 +26,7 @@ export function UploadModal() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
 
   const handleGenerateAI = async () => {
     if (!description.trim()) {
@@ -52,7 +53,7 @@ export function UploadModal() {
     }
     setIsGeneratingVideo(true);
     try {
-      toast({ title: "جاري توليد فيديو Veo 3 سينمائي... انتظر قليلاً." });
+      toast({ title: "جاري توليد فيديو Veo 2.0 سينمائي... انتظر قليلاً." });
       const result = await generateAIVideo({ prompt: description });
       setVideoUrl(result.videoDataUri);
       setIsLocalFile(false);
@@ -71,8 +72,13 @@ export function UploadModal() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 20 * 1024 * 1024) { // 20MB limit for demo Base64
-        toast({ title: "حجم الفيديو كبير", description: "الحد الأقصى في النسخة التجريبية هو 20 ميجابايت.", variant: "destructive" });
+      // الحد الأقصى لـ Firestore هو 1MB. سنسمح بـ 700KB فقط لتفادي أخطاء الـ Base64
+      if (file.size > 0.7 * 1024 * 1024) { 
+        toast({ 
+          title: "حجم الفيديو كبير جداً", 
+          description: "في النسخة التجريبية، الحد الأقصى هو 700 كيلوبايت لضمان المزامنة السحابية بدون تخزين Storage.", 
+          variant: "destructive" 
+        });
         return;
       }
       
@@ -80,7 +86,7 @@ export function UploadModal() {
       reader.onloadend = () => {
         setVideoUrl(reader.result as string);
         setIsLocalFile(true);
-        toast({ title: "تم اختيار الفيديو من هاتفك! ✅" });
+        toast({ title: "تم اختيار الفيديو! ✅ جاهز للنشر." });
       };
       reader.readAsDataURL(file);
     }
@@ -112,6 +118,9 @@ export function UploadModal() {
       setOpen(false);
       resetForm();
       toast({ title: "تم النشر بنجاح على AXI PRO MAX! 🚀" });
+    }).catch((err) => {
+      setIsUploading(false);
+      toast({ title: "فشل النشر", description: "قد يكون حجم الفيديو كبيراً جداً على قاعدة البيانات.", variant: "destructive" });
     });
   };
 
@@ -152,7 +161,7 @@ export function UploadModal() {
               )}
               <div className="text-center">
                 <p className="text-[10px] font-bold text-primary uppercase tracking-tighter">AI Generation</p>
-                <p className="text-[8px] text-white/40">Veo 3.0 Model</p>
+                <p className="text-[8px] text-white/40">Veo 2.0 Stable</p>
               </div>
             </button>
 
@@ -174,6 +183,15 @@ export function UploadModal() {
               />
             </button>
           </div>
+
+          {isLocalFile && (
+            <div className="bg-destructive/10 border border-destructive/20 p-3 rounded-xl flex items-start gap-3">
+              <AlertCircle className="text-destructive shrink-0 mt-0.5" size={16} />
+              <p className="text-[10px] text-white/70 leading-relaxed">
+                ملاحظة: الرفع من الهاتف محدود بـ 700KB. للفيديوهات الأكبر يرجى استخدام مولد الذكاء الاصطناعي AXI-AI.
+              </p>
+            </div>
+          )}
 
           {videoUrl && (
             <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-primary/20 shadow-2xl group">
