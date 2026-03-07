@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, setDocumentNonBlocking } from '@/firebase';
-import { updateProfile } from 'firebase/auth';
+import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
+import { updateProfile, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,23 +47,35 @@ export default function AuthPage() {
     if (!auth) return;
     setIsLoading(true);
     try {
-      initiateEmailSignUp(auth, formData.email, formData.password);
-      toast({ title: "جاري إنشاء حسابك في AXI PRO MAX..." });
-    } catch (error) {
-      toast({ title: "حدث خطأ أثناء التسجيل", variant: "destructive" });
+      await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      toast({ title: "تم إنشاء حسابك في AXI بنجاح! 🎉" });
+    } catch (error: any) {
+      let message = "حدث خطأ أثناء التسجيل";
+      if (error.code === 'auth/email-already-in-use') {
+        message = "هذا البريد الإلكتروني مسجل مسبقاً في AXI!";
+      } else if (error.code === 'auth/weak-password') {
+        message = "كلمة السر يجب أن تكون 6 أحرف على الأقل";
+      }
+      toast({ title: message, variant: "destructive" });
+    } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
     setIsLoading(true);
     try {
-      initiateEmailSignIn(auth, formData.email, formData.password);
-      toast({ title: "جاري الدخول إلى عالم AXI..." });
-    } catch (error) {
-      toast({ title: "فشل تسجيل الدخول", variant: "destructive" });
+      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      toast({ title: "أهلاً بك مجدداً في عالم AXI..." });
+    } catch (error: any) {
+      let message = "فشل تسجيل الدخول";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        message = "البريد الإلكتروني أو كلمة السر غير صحيحة";
+      }
+      toast({ title: message, variant: "destructive" });
+    } finally {
       setIsLoading(false);
     }
   };
