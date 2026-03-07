@@ -32,36 +32,52 @@ const aiVideoGeneratorFlow = ai.defineFlow(
     outputSchema: AIVideoGeneratorOutputSchema,
   },
   async (input) => {
-    // استخدام Veo 3.0 المطور لتوليد فيديوهات سينمائية مع الصوت
-    let { operation } = await ai.generate({
-      model: googleAI.model('veo-3.0-generate-preview'),
-      prompt: input.prompt,
-      config: {
-        aspectRatio: '16:9',
-      },
-    });
+    try {
+      // استخدام Veo 3.0 المطور لتوليد فيديوهات سينمائية مع الصوت
+      let { operation } = await ai.generate({
+        model: googleAI.model('veo-3.0-generate-preview'),
+        prompt: input.prompt,
+        config: {
+          aspectRatio: '16:9',
+        },
+      });
 
-    if (!operation) {
-      throw new Error('Expected the model to return an operation');
-    }
+      if (!operation) {
+        throw new Error('فشل النظام في بدء عملية التوليد.');
+      }
 
-    // الانتظار حتى اكتمال التوليد (قد يستغرق حوالي دقيقة)
-    while (!operation.done) {
-      operation = await ai.checkOperation(operation);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
+      // الانتظار حتى اكتمال التوليد (قد يستغرق حوالي دقيقة)
+      // نضع حد أقصى للانتظار لتجنب التعليق اللانهائي
+      let attempts = 0;
+      const maxAttempts = 24; // 24 * 5s = 120s (2 minutes)
 
-    if (operation.error) {
-      throw new Error('Failed to generate video: ' + operation.error.message);
-    }
+      while (!operation.done && attempts < maxAttempts) {
+        operation = await ai.checkOperation(operation);
+        if (!operation.done) {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          attempts++;
+        }
+      }
 
-    const videoPart = operation.output?.message?.content.find((p) => !!p.media);
-    if (!videoPart || !videoPart.media) {
-      throw new Error('Failed to find the generated video in the output');
+      if (attempts >= maxAttempts && !operation.done) {
+        throw new Error('استغرقت عملية التوليد وقتاً طويلاً جداً. يرجى المحاولة لاحقاً.');
+      }
+
+      if (operation.error) {
+        throw new Error('خطأ في نموذج Veo: ' + operation.error.message);
+      }
+
+      const videoPart = operation.output?.message?.content.find((p) => !!p.media);
+      if (!videoPart || !videoPart.media) {
+        throw new Error('لم نتمكن من العثور على الفيديو الناتج. قد يكون هناك قيود على المحتوى.');
+      }
+      
+      return {
+        videoDataUri: videoPart.media.url
+      };
+    } catch (err: any) {
+      console.error("AI Generation Error:", err);
+      throw new Error(err.message || "فشل غير متوقع في توليد الفيديو.");
     }
-    
-    return {
-      videoDataUri: videoPart.media.url
-    };
   }
 );
