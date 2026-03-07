@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Sparkles, Loader2, Upload, Video, FileVideo, CheckCircle2, AlertCircle } from 'lucide-react';
+import { PlusCircle, Sparkles, Loader2, Upload, CheckCircle2 } from 'lucide-react';
 import { generateCaptionAndHashtags } from '@/ai/flows/ai-caption-and-hashtag-generator';
 import { generateAIVideo } from '@/ai/flows/ai-video-generator';
 import { useToast } from '@/hooks/use-toast';
@@ -80,7 +80,7 @@ export function UploadModal() {
       if (file.size > MAX_SIZE) { 
         toast({ 
           title: "حجم الفيديو كبير جداً", 
-          description: "الحد الأقصى هو 100 ميجابايت.", 
+          description: "الحد الأقصى هو 100 ميجابايت لضمان أفضل أداء.", 
           variant: "destructive" 
         });
         return;
@@ -106,9 +106,9 @@ export function UploadModal() {
     let finalVideoUrl = videoUrl;
 
     try {
-      // إذا كان الملف محلياً، نرفعه لـ Storage أولاً
+      // إذا كان الملف محلياً، نرفعه لـ Storage أولاً لدعم أحجام حتى 100MB
       if (selectedFile) {
-        toast({ title: "جاري رفع الفيديو إلى السيرفر السحابي..." });
+        toast({ title: "جاري رفع الفيديو إلى السيرفر السحابي (AXI Storage)..." });
         const storageRef = ref(storage, `videos/${user.uid}/${Date.now()}_${selectedFile.name}`);
         const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
@@ -119,7 +119,7 @@ export function UploadModal() {
               setUploadProgress(progress);
             }, 
             (error) => {
-              console.error("Storage error:", error);
+              console.error("Storage upload error:", error);
               reject(error);
             }, 
             async () => {
@@ -144,9 +144,9 @@ export function UploadModal() {
       setIsUploading(false);
       setOpen(false);
       resetForm();
-      toast({ title: "تم النشر بنجاح على AXI! 🚀" });
+      toast({ title: "تم النشر بنجاح على AXI PRO MAX! 🚀" });
     } catch (err: any) {
-      console.error("Upload error:", err);
+      console.error("Final upload error:", err);
       setIsUploading(false);
       toast({ 
         title: "فشل النشر", 
@@ -194,7 +194,7 @@ export function UploadModal() {
               )}
               <div className="text-center">
                 <p className="text-[10px] font-bold text-primary uppercase">AXI-AI Video</p>
-                <p className="text-[8px] text-white/40">Cinema Quality</p>
+                <p className="text-[8px] text-white/40">Veo 2.0 Cinema</p>
               </div>
             </button>
 
@@ -205,7 +205,7 @@ export function UploadModal() {
               <Upload className="w-8 h-8 text-accent" />
               <div className="text-center">
                 <p className="text-[10px] font-bold text-accent uppercase">Phone Upload</p>
-                <p className="text-[8px] text-white/40">Up to 100MB</p>
+                <p className="text-[8px] text-white/40">Max 100MB</p>
               </div>
               <input 
                 type="file" 
@@ -222,7 +222,7 @@ export function UploadModal() {
               <video src={videoUrl} className="w-full h-full object-contain" controls />
               <div className="absolute top-2 right-2 bg-primary/90 text-black text-[9px] px-2 py-0.5 rounded-full font-bold shadow-lg flex items-center gap-1">
                 <CheckCircle2 size={10} />
-                READY
+                READY TO GO
               </div>
             </div>
           )}
@@ -230,7 +230,7 @@ export function UploadModal() {
           {isUploading && selectedFile && (
             <div className="space-y-2">
               <div className="flex justify-between text-[10px] font-bold text-primary uppercase">
-                <span>جاري الرفع...</span>
+                <span>جاري الرفع السحابي...</span>
                 <span>{Math.round(uploadProgress)}%</span>
               </div>
               <Progress value={uploadProgress} className="h-2 bg-white/5" />
@@ -242,7 +242,7 @@ export function UploadModal() {
               <label className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] ml-1">Video Story</label>
               <div className="relative">
                 <Textarea 
-                  placeholder="صف فكرة الفيديو هنا..." 
+                  placeholder="صف فكرة الفيديو هنا للذكاء الاصطناعي..." 
                   className="bg-white/5 border-none resize-none pr-10 text-white h-20 rounded-xl focus:ring-1 focus:ring-primary/30"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}

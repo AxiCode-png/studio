@@ -1,10 +1,11 @@
 'use server';
 /**
  * @fileOverview A robust Genkit flow for generating cinema-quality short videos using the stable Veo 2.0 model.
- *
- * - generateAIVideo - A function that handles the video generation process.
- * - AIVideoGeneratorInput - The input type for the function.
- * - AIVideoGeneratorOutput - The return type.
+ * 
+ * This flow handles:
+ * 1. Initiating the video generation operation.
+ * 2. Polling for completion.
+ * 3. Fetching the final video and converting it to a base64 data URI for client-side usage.
  */
 
 import {ai} from '@/ai/genkit';
@@ -48,7 +49,7 @@ const aiVideoGeneratorFlow = ai.defineFlow(
         throw new Error('لم يتمكن النظام من بدء عملية التوليد. تأكد من إعداد API Key.');
       }
 
-      // الانتظار حتى اكتمال التوليد مع زيادة عدد المحاولات لتجنب الأخطاء
+      // الانتظار حتى اكتمال التوليد
       let attempts = 0;
       const maxAttempts = 30; // 30 * 5 = 150 ثانية كحد أقصى
 
@@ -68,9 +69,22 @@ const aiVideoGeneratorFlow = ai.defineFlow(
       if (!videoPart || !videoPart.media) {
         throw new Error('فشل توليد الفيديو. قد يكون الوصف مخالفاً لسياسات السلامة.');
       }
+
+      // تحويل الفيديو إلى Base64 Data URI لضمان عمله عند الجميع
+      const fetch = (await import('node-fetch')).default;
+      const videoDownloadResponse = await fetch(
+        `${videoPart.media.url}&key=${process.env.GEMINI_API_KEY}`
+      );
+
+      if (!videoDownloadResponse.ok) {
+        throw new Error('فشل تحميل الفيديو المولد من السيرفر.');
+      }
+
+      const buffer = await videoDownloadResponse.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
       
       return {
-        videoDataUri: videoPart.media.url
+        videoDataUri: `data:video/mp4;base64,${base64}`
       };
     } catch (err: any) {
       console.error("AI Generation Error:", err);
