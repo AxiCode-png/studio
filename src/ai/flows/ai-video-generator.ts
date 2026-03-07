@@ -50,12 +50,12 @@ const aiVideoGeneratorFlow = ai.defineFlow(
 
       // الانتظار الذكي (Polling)
       let attempts = 0;
-      const maxAttempts = 40; // زيادة وقت الانتظار للفيديوهات المعقدة
+      const maxAttempts = 40; 
 
       while (!operation.done && attempts < maxAttempts) {
         operation = await ai.checkOperation(operation);
         if (!operation.done) {
-          await new Promise((resolve) => setTimeout(resolve, 3000)); // تقليل الفجوة لتسريع الاستجابة
+          await new Promise((resolve) => setTimeout(resolve, 3000)); 
           attempts++;
         }
       }
@@ -69,7 +69,6 @@ const aiVideoGeneratorFlow = ai.defineFlow(
         throw new Error('لم يتمكن الذكاء الاصطناعي من تحويل الفكرة لفيديو. جرب وصفاً مختلفاً.');
       }
 
-      // جلب الفيديو وتحويله بسرعة
       const fetch = (await import('node-fetch')).default;
       const videoDownloadResponse = await fetch(
         `${videoPart.media.url}&key=${process.env.GEMINI_API_KEY || 'AIzaSyDD0biCG-dxQzZ75c_5fmZHliR4TnBAls0'}`

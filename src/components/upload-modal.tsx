@@ -208,7 +208,7 @@ export function UploadModal() {
             >
               <Upload className="w-8 h-8 text-accent group-hover:-translate-y-1 transition-transform" />
               <div className="text-center">
-                <p className="text-[10px] font-bold text-accent uppercase">Fast Upload</p>
+                <p className="text-[10px] font-bold text-accent uppercase">Phone Upload</p>
                 <p className="text-[8px] text-white/40">Up to 100MB</p>
               </div>
               <input 

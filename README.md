@@ -1,5 +1,34 @@
-# Firebase Studio
+# AXI PRO MAX - منصة الفيديوهات القصيرة الذكية
 
-This is a NextJS starter in Firebase Studio.
+هذا المشروع هو منصة متطورة للفيديوهات القصيرة مدعومة بالذكاء الاصطناعي (Veo 2.0) وتخزين سحابي ضخم.
 
-To get started, take a look at src/app/page.tsx.
+## 🚀 كيفية نقل المشروع إلى GitHub
+
+اتبع الخطوات التالية لنقل الكود الخاص بك:
+
+1. **إنشاء مستودع (Repository)**: اذهب إلى حسابك في GitHub وأنشئ مستودعاً جديداً باسم `axi-pro-max`.
+2. **إعداد Git في المشروع**: افتح Terminal في بيئة العمل الحالية ونفذ الأوامر التالية:
+   ```bash
+   git init
+   git add .
+   git commit -m "الإصدار الأول من AXI PRO MAX"
+   git branch -M main
+   git remote add origin https://github.com/USERNAME/axi-pro-max.git
+   git push -u origin main
+   ```
+   *(استبدل USERNAME باسم مستخدم GitHub الخاص بك)*
+
+3. **الربط مع Firebase**:
+   - اذهب إلى [Firebase Console](https://console.firebase.google.com/).
+   - اختر مشروعك الحالي.
+   - من القائمة الجانبية، اختر **App Hosting**.
+   - اضغط على **Connect to GitHub** واتبع التعليمات لاختيار المستودع الذي رفعته.
+
+## ✨ الميزات الحالية
+- **الذكاء الاصطناعي (Veo 2.0)**: توليد فيديوهات سينمائية من الأفكار.
+- **رفع 100MB**: دعم رفع فيديوهات عالية الجودة من الهاتف مع شريط تقدم.
+- **بث مباشر (Live)**: واجهة تفاعلية للبث المباشر.
+- **أمان عالي**: نظام تسجيل دخول متكامل ومرتبط بـ Firestore.
+
+---
+تم التطوير بواسطة AXI AI Engine.
