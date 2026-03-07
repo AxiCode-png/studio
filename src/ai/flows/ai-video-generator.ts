@@ -1,8 +1,8 @@
 'use server';
 /**
- * @fileOverview A robust Genkit flow for generating cinema-quality short videos using the stable Veo 2.0 model.
+ * @fileOverview محرك توليد الفيديوهات السينمائية AXI-AI المعتمد على نموذج Veo 2.0 المستقر.
  * 
- * Optimized for speed and "idea-to-video" accuracy.
+ * تم تحسين هذا التدفق ليدعم تحويل الأفكار البسيطة إلى فيديوهات بجودة 16:9 وصوت مدمج.
  */
 
 import {ai} from '@/ai/genkit';
@@ -31,7 +31,7 @@ const aiVideoGeneratorFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      // استخدام Veo 2.0 المستقر مع تمكين تحسين الوصف تلقائياً
+      // استخدام نموذج Veo 2.0 المستقر لضمان أعلى جودة وسرعة
       let { operation } = await ai.generate({
         model: googleAI.model('veo-2.0-generate-001'),
         prompt: input.prompt,
@@ -39,34 +39,30 @@ const aiVideoGeneratorFlow = ai.defineFlow(
           aspectRatio: '16:9',
           durationSeconds: 5,
           personGeneration: 'allow_all',
-          // @ts-ignore - Some versions support enhancePrompt
+          // @ts-ignore
           enhancePrompt: true 
         },
       });
 
       if (!operation) {
-        throw new Error('فشل بدء الاتصال بـ AXI AI. تأكد من إعداد API Key.');
+        throw new Error('محرك AXI-AI غير متاح حالياً. يرجى التأكد من الـ API Key.');
       }
 
-      // الانتظار الذكي (Polling)
-      let attempts = 0;
-      const maxAttempts = 40; 
-
-      while (!operation.done && attempts < maxAttempts) {
+      // الانتظار حتى اكتمال التوليد (Polling)
+      while (!operation.done) {
         operation = await ai.checkOperation(operation);
         if (!operation.done) {
-          await new Promise((resolve) => setTimeout(resolve, 3000)); 
-          attempts++;
+          await new Promise((resolve) => setTimeout(resolve, 4000));
         }
       }
 
       if (operation.error) {
-        throw new Error('خطأ في معالجة الفكرة: ' + operation.error.message);
+        throw new Error('خطأ في معالجة الفكرة السينمائية: ' + operation.error.message);
       }
 
       const videoPart = operation.output?.message?.content.find((p) => !!p.media);
       if (!videoPart || !videoPart.media) {
-        throw new Error('لم يتمكن الذكاء الاصطناعي من تحويل الفكرة لفيديو. جرب وصفاً مختلفاً.');
+        throw new Error('فشل الذكاء الاصطناعي في إنتاج الفيديو. جرب وصفاً مختلفاً.');
       }
 
       const fetch = (await import('node-fetch')).default;
@@ -75,7 +71,7 @@ const aiVideoGeneratorFlow = ai.defineFlow(
       );
 
       if (!videoDownloadResponse.ok) {
-        throw new Error('فشل تحميل الفيديو المولد.');
+        throw new Error('فشل تحميل الفيديو المولد من خوادم AI.');
       }
 
       const buffer = await videoDownloadResponse.arrayBuffer();
@@ -85,8 +81,8 @@ const aiVideoGeneratorFlow = ai.defineFlow(
         videoDataUri: `data:video/mp4;base64,${base64}`
       };
     } catch (err: any) {
-      console.error("AI Generation Error:", err);
-      throw new Error(err.message || "حدث خطأ أثناء توليد الفيديو.");
+      console.error("AXI-AI Video Flow Error:", err);
+      throw new Error(err.message || "حدث خطأ تقني أثناء توليد الفيديو.");
     }
   }
 );
