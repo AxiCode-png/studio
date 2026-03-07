@@ -8,13 +8,13 @@ import {
   signInWithEmailAndPassword,
   updateProfile
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, User, Cake } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Cake, ArrowRight } from 'lucide-react';
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -52,26 +52,31 @@ export default function AuthPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const newUser = userCredential.user;
 
-      await setDoc(doc(db, 'users', newUser.uid), {
+      const profileData = {
         id: newUser.uid,
         firstName: formData.firstName,
         lastName: formData.lastName,
         age: parseInt(formData.age) || 0,
         email: formData.email,
         joinedAt: new Date().toISOString()
-      });
+      };
 
+      await setDoc(doc(db, 'users', newUser.uid), profileData);
       await updateProfile(newUser, {
         displayName: `${formData.firstName} ${formData.lastName}`
       });
 
-      toast({ title: "أهلاً بك في عالم AXI PRO MAX! 🎉" });
+      toast({ title: "أهلاً بك في عالم AXI! 🎉", description: "تم إنشاء حسابك بنجاح." });
       router.push('/');
     } catch (error: any) {
-      let message = "حدث خطأ أثناء التسجيل";
-      if (error.code === 'auth/email-already-in-use') message = "هذا البريد مسجل مسبقاً!";
-      else if (error.code === 'auth/weak-password') message = "كلمة السر يجب أن تكون 6 أحرف على الأقل";
-      toast({ title: message, variant: "destructive" });
+      console.error("Sign up error:", error);
+      let message = "حدث خطأ غير متوقع";
+      if (error.code === 'auth/email-already-in-use') {
+        message = "البريد مسجل مسبقاً! جرب الدخول.";
+      } else if (error.code === 'auth/weak-password') {
+        message = "كلمة السر ضعيفة جداً.";
+      }
+      toast({ title: "خطأ في التسجيل", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +92,8 @@ export default function AuthPage() {
       toast({ title: "تم الدخول بنجاح! 🚀" });
       router.push('/');
     } catch (error: any) {
-      toast({ title: "خطأ في البريد أو كلمة السر", variant: "destructive" });
+      console.error("Login error:", error);
+      toast({ title: "خطأ في الدخول", description: "تأكد من البريد وكلمة السر.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -100,74 +106,84 @@ export default function AuthPage() {
   );
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 bg-[#0A0A0A]">
-      <Card className="w-full max-w-md border-primary/20 bg-card/80 backdrop-blur-xl shadow-[0_0_50px_rgba(0,229,255,0.15)]">
-        <CardHeader className="text-center space-y-1">
-          <CardTitle className="text-5xl font-headline font-bold text-primary neon-text tracking-tighter">AXI</CardTitle>
-          <CardDescription className="text-white/50 text-xs uppercase tracking-widest font-bold">Pro Max AI Edition</CardDescription>
+    <main className="min-h-screen flex items-center justify-center p-6 bg-[#0A0A0A] relative overflow-hidden">
+      {/* Background Glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 blur-[120px] rounded-full" />
+
+      <Card className="w-full max-w-md border-primary/20 bg-black/40 backdrop-blur-2xl shadow-[0_0_80px_rgba(0,229,255,0.1)] relative z-10 rounded-[2.5rem] overflow-hidden">
+        <CardHeader className="text-center pt-10 pb-6">
+          <CardTitle className="text-6xl font-headline font-bold text-primary neon-text tracking-tighter italic">AXI</CardTitle>
+          <CardDescription className="text-white/40 text-[10px] uppercase tracking-[0.4em] font-bold mt-2">Elite Content Platform</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-8 pb-10">
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/20 p-1">
-              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold uppercase">دخول</TabsTrigger>
-              <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold uppercase">تسجيل</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-10 bg-white/5 rounded-2xl p-1 h-12">
+              <TabsTrigger value="login" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black font-bold uppercase text-xs">Login</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black font-bold uppercase text-xs">Join</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 text-primary size-5" />
-                  <Input
-                    type="email"
-                    name="email"
-                    placeholder="البريد الإلكتروني"
-                    required
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white"
-                  />
+            <TabsContent value="login" className="animate-in fade-in slide-in-from-right-4 duration-500">
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div className="space-y-4">
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 size-5 group-focus-within:text-primary transition-colors" />
+                    <Input
+                      type="email"
+                      name="email"
+                      placeholder="Email Address"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="pl-12 bg-white/5 border-none h-14 text-white rounded-2xl focus:ring-1 focus:ring-primary/50"
+                    />
+                  </div>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 size-5 group-focus-within:text-primary transition-colors" />
+                    <Input
+                      type="password"
+                      name="password"
+                      placeholder="Password"
+                      required
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="pl-12 bg-white/5 border-none h-14 text-white rounded-2xl focus:ring-1 focus:ring-primary/50"
+                    />
+                  </div>
                 </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 text-primary size-5" />
-                  <Input
-                    type="password"
-                    name="password"
-                    placeholder="كلمة السر"
-                    required
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white"
-                  />
-                </div>
-                <Button className="w-full h-12 font-bold bg-primary text-black hover:bg-primary/90 text-lg shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all active:scale-95" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : "دخول إلى AXI"}
+                <Button className="w-full h-14 font-bold bg-primary text-black hover:bg-primary/90 text-lg rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.2)] transition-all active:scale-95 mt-4 group" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : (
+                    <div className="flex items-center gap-2">
+                      Enter AXI <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  )}
                 </Button>
               </form>
             </TabsContent>
 
-            <TabsContent value="signup">
+            <TabsContent value="signup" className="animate-in fade-in slide-in-from-left-4 duration-500">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 text-primary size-4" />
-                    <Input name="firstName" placeholder="الاسم" required value={formData.firstName} onChange={handleInputChange} className="pl-10 bg-white/5 border-none h-11 text-white" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative group">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 size-4 group-focus-within:text-primary transition-colors" />
+                    <Input name="firstName" placeholder="First" required value={formData.firstName} onChange={handleInputChange} className="pl-11 bg-white/5 border-none h-12 text-white rounded-2xl" />
                   </div>
-                  <Input name="lastName" placeholder="اللقب" required value={formData.lastName} onChange={handleInputChange} className="bg-white/5 border-none h-11 text-white" />
+                  <Input name="lastName" placeholder="Last" required value={formData.lastName} onChange={handleInputChange} className="bg-white/5 border-none h-12 text-white rounded-2xl" />
                 </div>
-                <div className="relative">
-                  <Cake className="absolute left-3 top-3 text-primary size-5" />
-                  <Input type="number" name="age" placeholder="العمر" required value={formData.age} onChange={handleInputChange} className="pl-11 bg-white/5 border-none h-12 text-white" />
+                <div className="relative group">
+                  <Cake className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 size-5" />
+                  <Input type="number" name="age" placeholder="Your Age" required value={formData.age} onChange={handleInputChange} className="pl-12 bg-white/5 border-none h-14 text-white rounded-2xl" />
                 </div>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 text-primary size-5" />
-                  <Input type="email" name="email" placeholder="البريد الإلكتروني" required value={formData.email} onChange={handleInputChange} className="pl-11 bg-white/5 border-none h-12 text-white" />
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 size-5" />
+                  <Input type="email" name="email" placeholder="Email" required value={formData.email} onChange={handleInputChange} className="pl-12 bg-white/5 border-none h-14 text-white rounded-2xl" />
                 </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 text-primary size-5" />
-                  <Input type="password" name="password" placeholder="كلمة السر" required value={formData.password} onChange={handleInputChange} className="pl-11 bg-white/5 border-none h-12 text-white" />
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 size-5" />
+                  <Input type="password" name="password" placeholder="Password (min 6)" required value={formData.password} onChange={handleInputChange} className="pl-12 bg-white/5 border-none h-14 text-white rounded-2xl" />
                 </div>
-                <Button className="w-full h-12 font-bold bg-primary text-black hover:bg-primary/90 text-lg shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all active:scale-95" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : "إنضم الآن"}
+                <Button className="w-full h-14 font-bold bg-primary text-black hover:bg-primary/90 text-lg rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.2)] transition-all active:scale-95 mt-2" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "Start Journey"}
                 </Button>
               </form>
             </TabsContent>

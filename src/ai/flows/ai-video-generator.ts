@@ -12,12 +12,12 @@ import {z} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
 const AIVideoGeneratorInputSchema = z.object({
-  prompt: z.string().describe('A detailed description of the video you want to generate.'),
+  prompt: z.string().describe('وصف تفصيلي للفيديو المراد توليده.'),
 });
 export type AIVideoGeneratorInput = z.infer<typeof AIVideoGeneratorInputSchema>;
 
 const AIVideoGeneratorOutputSchema = z.object({
-  videoDataUri: z.string().describe('The generated video as a data URI.'),
+  videoDataUri: z.string().describe('الفيديو المولد بصيغة data URI.'),
 });
 export type AIVideoGeneratorOutput = z.infer<typeof AIVideoGeneratorOutputSchema>;
 
@@ -33,7 +33,7 @@ const aiVideoGeneratorFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      // استخدام Veo 3.0 المطور لتوليد فيديوهات سينمائية مع الصوت
+      // استخدام أحدث نموذج Veo 3.0 لتوليد فيديوهات سينمائية
       let { operation } = await ai.generate({
         model: googleAI.model('veo-3.0-generate-preview'),
         prompt: input.prompt,
@@ -43,13 +43,12 @@ const aiVideoGeneratorFlow = ai.defineFlow(
       });
 
       if (!operation) {
-        throw new Error('فشل النظام في بدء عملية التوليد.');
+        throw new Error('لم يتمكن النظام من بدء عملية التوليد. تأكد من إعداد API Key.');
       }
 
-      // الانتظار حتى اكتمال التوليد (قد يستغرق حوالي دقيقة)
-      // نضع حد أقصى للانتظار لتجنب التعليق اللانهائي
+      // الانتظار حتى اكتمال التوليد (بحد أقصى دقيقتين)
       let attempts = 0;
-      const maxAttempts = 24; // 24 * 5s = 120s (2 minutes)
+      const maxAttempts = 24; 
 
       while (!operation.done && attempts < maxAttempts) {
         operation = await ai.checkOperation(operation);
@@ -59,17 +58,13 @@ const aiVideoGeneratorFlow = ai.defineFlow(
         }
       }
 
-      if (attempts >= maxAttempts && !operation.done) {
-        throw new Error('استغرقت عملية التوليد وقتاً طويلاً جداً. يرجى المحاولة لاحقاً.');
-      }
-
       if (operation.error) {
-        throw new Error('خطأ في نموذج Veo: ' + operation.error.message);
+        throw new Error('خطأ في نموذج الذكاء الاصطناعي: ' + operation.error.message);
       }
 
       const videoPart = operation.output?.message?.content.find((p) => !!p.media);
       if (!videoPart || !videoPart.media) {
-        throw new Error('لم نتمكن من العثور على الفيديو الناتج. قد يكون هناك قيود على المحتوى.');
+        throw new Error('فشل توليد الفيديو. قد يكون المحتوى مخالفاً لسياسات السلامة.');
       }
       
       return {
