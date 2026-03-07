@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { PlusCircle, Sparkles, Loader2, Upload, CheckCircle2 } from 'lucide-react';
+import { PlusCircle, Sparkles, Loader2, Upload, CheckCircle2, Zap } from 'lucide-react';
 import { generateCaptionAndHashtags } from '@/ai/flows/ai-caption-and-hashtag-generator';
 import { generateAIVideo } from '@/ai/flows/ai-video-generator';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +34,7 @@ export function UploadModal() {
 
   const handleGenerateAI = async () => {
     if (!description.trim()) {
-      toast({ title: "الرجاء إدخال وصف للفيديو أولاً.", variant: "destructive" });
+      toast({ title: "الرجاء إدخال فكرة للفيديو.", variant: "destructive" });
       return;
     }
     setIsGenerating(true);
@@ -52,20 +52,23 @@ export function UploadModal() {
 
   const handleGenerateVideo = async () => {
     if (!description.trim()) {
-      toast({ title: "اكتب وصفاً لتوليد فيديو AXI-AI.", variant: "destructive" });
+      toast({ title: "اكتب فكرة لتحويلها لفيديو AXI AI.", variant: "destructive" });
       return;
     }
     setIsGeneratingVideo(true);
     try {
-      toast({ title: "جاري توليد فيديو AXI-AI سينمائي... قد يستغرق دقيقة." });
+      toast({ 
+        title: "جاري تحويل الفكرة إلى فيديو سينمائي...", 
+        description: "تقنية Veo 2.0 تعمل الآن على طلبك.",
+      });
       const result = await generateAIVideo({ prompt: description });
       setVideoUrl(result.videoDataUri);
       setSelectedFile(null);
       toast({ title: "تم توليد الفيديو بنجاح! 🎬" });
     } catch (error: any) {
       toast({ 
-        title: "فشل الذكاء الاصطناعي", 
-        description: error.message || "تأكد من إعداد API Key بشكل صحيح.", 
+        title: "خطأ في الذكاء الاصطناعي", 
+        description: error.message, 
         variant: "destructive" 
       });
     } finally {
@@ -80,7 +83,7 @@ export function UploadModal() {
       if (file.size > MAX_SIZE) { 
         toast({ 
           title: "حجم الفيديو كبير جداً", 
-          description: "الحد الأقصى هو 100 ميجابايت لضمان أفضل أداء.", 
+          description: "الحد الأقصى هو 100 ميجابايت.", 
           variant: "destructive" 
         });
         return;
@@ -106,9 +109,8 @@ export function UploadModal() {
     let finalVideoUrl = videoUrl;
 
     try {
-      // إذا كان الملف محلياً، نرفعه لـ Storage أولاً لدعم أحجام حتى 100MB
       if (selectedFile) {
-        toast({ title: "جاري رفع الفيديو إلى السيرفر السحابي (AXI Storage)..." });
+        toast({ title: "جاري الرفع السريع لـ AXI Storage..." });
         const storageRef = ref(storage, `videos/${user.uid}/${Date.now()}_${selectedFile.name}`);
         const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
@@ -131,7 +133,7 @@ export function UploadModal() {
       }
 
       const videosRef = collection(db, 'videos');
-      await addDocumentNonBlocking(videosRef, {
+      addDocumentNonBlocking(videosRef, {
         title,
         description,
         hashtags,
@@ -144,13 +146,13 @@ export function UploadModal() {
       setIsUploading(false);
       setOpen(false);
       resetForm();
-      toast({ title: "تم النشر بنجاح على AXI PRO MAX! 🚀" });
+      toast({ title: "تم النشر بنجاح! 🚀" });
     } catch (err: any) {
       console.error("Final upload error:", err);
       setIsUploading(false);
       toast({ 
         title: "فشل النشر", 
-        description: "تأكد من تفعيل Storage في Firebase Console.", 
+        description: "تأكد من تفعيل Storage في Firebase.", 
         variant: "destructive" 
       });
     }
@@ -168,7 +170,7 @@ export function UploadModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="flex flex-col items-center justify-center p-2 text-white">
+        <button className="flex flex-col items-center justify-center p-2 text-white transition-transform active:scale-90">
           <div className="relative scale-110">
             <div className="absolute inset-0 bg-primary blur-lg opacity-40 rounded-full"></div>
             <PlusCircle size={44} className="relative z-10 text-primary fill-background" />
@@ -177,7 +179,9 @@ export function UploadModal() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg bg-background border-primary/20 text-foreground overflow-y-auto max-h-[95vh] backdrop-blur-2xl p-6 rounded-[2rem]">
         <DialogHeader>
-          <DialogTitle className="font-headline text-3xl text-primary text-center neon-text tracking-tighter italic mb-2">AXI PUBLISH PRO</DialogTitle>
+          <DialogTitle className="font-headline text-3xl text-primary text-center neon-text tracking-tighter italic mb-2 flex items-center justify-center gap-2">
+            <Zap className="size-6 text-primary animate-pulse" /> AXI PUBLISH PRO
+          </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6 pt-2">
@@ -185,27 +189,27 @@ export function UploadModal() {
             <button 
               onClick={handleGenerateVideo}
               disabled={isGeneratingVideo}
-              className="border-2 border-dashed border-primary/30 rounded-2xl flex flex-col items-center justify-center gap-2 bg-primary/5 hover:bg-primary/10 transition-all active:scale-95"
+              className="border-2 border-dashed border-primary/30 rounded-2xl flex flex-col items-center justify-center gap-2 bg-primary/5 hover:bg-primary/10 transition-all active:scale-95 group"
             >
               {isGeneratingVideo ? (
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
               ) : (
-                <Sparkles className="w-8 h-8 text-primary" />
+                <Sparkles className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
               )}
               <div className="text-center">
                 <p className="text-[10px] font-bold text-primary uppercase">AXI-AI Video</p>
-                <p className="text-[8px] text-white/40">Veo 2.0 Cinema</p>
+                <p className="text-[8px] text-white/40">From Idea to Reality</p>
               </div>
             </button>
 
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center gap-2 bg-accent/5 hover:bg-accent/10 transition-all active:scale-95"
+              className="border-2 border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center gap-2 bg-accent/5 hover:bg-accent/10 transition-all active:scale-95 group"
             >
-              <Upload className="w-8 h-8 text-accent" />
+              <Upload className="w-8 h-8 text-accent group-hover:-translate-y-1 transition-transform" />
               <div className="text-center">
-                <p className="text-[10px] font-bold text-accent uppercase">Phone Upload</p>
-                <p className="text-[8px] text-white/40">Max 100MB</p>
+                <p className="text-[10px] font-bold text-accent uppercase">Fast Upload</p>
+                <p className="text-[8px] text-white/40">Up to 100MB</p>
               </div>
               <input 
                 type="file" 
@@ -222,28 +226,28 @@ export function UploadModal() {
               <video src={videoUrl} className="w-full h-full object-contain" controls />
               <div className="absolute top-2 right-2 bg-primary/90 text-black text-[9px] px-2 py-0.5 rounded-full font-bold shadow-lg flex items-center gap-1">
                 <CheckCircle2 size={10} />
-                READY TO GO
+                READY FOR WORLD
               </div>
             </div>
           )}
 
           {isUploading && selectedFile && (
-            <div className="space-y-2">
+            <div className="space-y-2 p-3 bg-white/5 rounded-xl border border-white/10">
               <div className="flex justify-between text-[10px] font-bold text-primary uppercase">
-                <span>جاري الرفع السحابي...</span>
+                <span>جاري الرفع الفائق السرعة...</span>
                 <span>{Math.round(uploadProgress)}%</span>
               </div>
-              <Progress value={uploadProgress} className="h-2 bg-white/5" />
+              <Progress value={uploadProgress} className="h-1.5 bg-white/5" />
             </div>
           )}
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] ml-1">Video Story</label>
+              <label className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] ml-1">Your Idea</label>
               <div className="relative">
                 <Textarea 
-                  placeholder="صف فكرة الفيديو هنا للذكاء الاصطناعي..." 
-                  className="bg-white/5 border-none resize-none pr-10 text-white h-20 rounded-xl focus:ring-1 focus:ring-primary/30"
+                  placeholder="اكتب فكرتك هنا وسيقوم AXI AI بتحويلها لمشهد سينمائي..." 
+                  className="bg-white/5 border-none resize-none pr-10 text-white h-24 rounded-xl focus:ring-1 focus:ring-primary/30"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
@@ -260,10 +264,10 @@ export function UploadModal() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] ml-1">Catchy Title</label>
+              <label className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] ml-1">Video Title</label>
               <Input 
-                placeholder="عنوان الفيديو..." 
-                className="bg-white/5 border-none text-white h-11 rounded-xl focus:ring-1 focus:ring-primary/30" 
+                placeholder="عنوان جذاب للفيديو..." 
+                className="bg-white/5 border-none text-white h-12 rounded-xl focus:ring-1 focus:ring-primary/30" 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
@@ -271,11 +275,15 @@ export function UploadModal() {
           </div>
 
           <Button 
-            className="w-full bg-primary text-black font-bold h-14 rounded-2xl text-lg hover:bg-primary/90 shadow-[0_10px_30px_rgba(0,229,255,0.2)]"
+            className="w-full bg-primary text-black font-bold h-15 rounded-2xl text-lg hover:bg-primary/90 shadow-[0_10px_40px_rgba(0,229,255,0.3)] transition-all active:scale-95"
             disabled={isUploading || isGeneratingVideo || !videoUrl}
             onClick={handleUpload}
           >
-            {isUploading ? <Loader2 className="animate-spin mr-2" /> : "نشر الآن"}
+            {isUploading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="animate-spin" /> جاري النشر...
+              </div>
+            ) : "انشر الآن للعالم"}
           </Button>
         </div>
       </DialogContent>

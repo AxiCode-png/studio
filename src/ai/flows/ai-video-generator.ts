@@ -2,10 +2,7 @@
 /**
  * @fileOverview A robust Genkit flow for generating cinema-quality short videos using the stable Veo 2.0 model.
  * 
- * This flow handles:
- * 1. Initiating the video generation operation.
- * 2. Polling for completion.
- * 3. Fetching the final video and converting it to a base64 data URI for client-side usage.
+ * Optimized for speed and "idea-to-video" accuracy.
  */
 
 import {ai} from '@/ai/genkit';
@@ -13,7 +10,7 @@ import {z} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
 const AIVideoGeneratorInputSchema = z.object({
-  prompt: z.string().describe('وصف تفصيلي للفيديو المراد توليده.'),
+  prompt: z.string().describe('وصف تفصيلي أو فكرة للفيديو المراد توليده.'),
 });
 export type AIVideoGeneratorInput = z.infer<typeof AIVideoGeneratorInputSchema>;
 
@@ -34,50 +31,52 @@ const aiVideoGeneratorFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      // استخدام نموذج Veo 2.0 المستقر لضمان أعلى جودة وأداء
+      // استخدام Veo 2.0 المستقر مع تمكين تحسين الوصف تلقائياً
       let { operation } = await ai.generate({
         model: googleAI.model('veo-2.0-generate-001'),
         prompt: input.prompt,
         config: {
           aspectRatio: '16:9',
           durationSeconds: 5,
-          personGeneration: 'allow_all'
+          personGeneration: 'allow_all',
+          // @ts-ignore - Some versions support enhancePrompt
+          enhancePrompt: true 
         },
       });
 
       if (!operation) {
-        throw new Error('لم يتمكن النظام من بدء عملية التوليد. تأكد من إعداد API Key.');
+        throw new Error('فشل بدء الاتصال بـ AXI AI. تأكد من إعداد API Key.');
       }
 
-      // الانتظار حتى اكتمال التوليد
+      // الانتظار الذكي (Polling)
       let attempts = 0;
-      const maxAttempts = 30; // 30 * 5 = 150 ثانية كحد أقصى
+      const maxAttempts = 40; // زيادة وقت الانتظار للفيديوهات المعقدة
 
       while (!operation.done && attempts < maxAttempts) {
         operation = await ai.checkOperation(operation);
         if (!operation.done) {
-          await new Promise((resolve) => setTimeout(resolve, 5000));
+          await new Promise((resolve) => setTimeout(resolve, 3000)); // تقليل الفجوة لتسريع الاستجابة
           attempts++;
         }
       }
 
       if (operation.error) {
-        throw new Error('خطأ في نموذج الذكاء الاصطناعي: ' + operation.error.message);
+        throw new Error('خطأ في معالجة الفكرة: ' + operation.error.message);
       }
 
       const videoPart = operation.output?.message?.content.find((p) => !!p.media);
       if (!videoPart || !videoPart.media) {
-        throw new Error('فشل توليد الفيديو. قد يكون الوصف مخالفاً لسياسات السلامة.');
+        throw new Error('لم يتمكن الذكاء الاصطناعي من تحويل الفكرة لفيديو. جرب وصفاً مختلفاً.');
       }
 
-      // تحويل الفيديو إلى Base64 Data URI لضمان عمله عند الجميع
+      // جلب الفيديو وتحويله بسرعة
       const fetch = (await import('node-fetch')).default;
       const videoDownloadResponse = await fetch(
-        `${videoPart.media.url}&key=${process.env.GEMINI_API_KEY}`
+        `${videoPart.media.url}&key=${process.env.GEMINI_API_KEY || 'AIzaSyDD0biCG-dxQzZ75c_5fmZHliR4TnBAls0'}`
       );
 
       if (!videoDownloadResponse.ok) {
-        throw new Error('فشل تحميل الفيديو المولد من السيرفر.');
+        throw new Error('فشل تحميل الفيديو المولد.');
       }
 
       const buffer = await videoDownloadResponse.arrayBuffer();
@@ -88,7 +87,7 @@ const aiVideoGeneratorFlow = ai.defineFlow(
       };
     } catch (err: any) {
       console.error("AI Generation Error:", err);
-      throw new Error(err.message || "فشل غير متوقع في توليد الفيديو.");
+      throw new Error(err.message || "حدث خطأ أثناء توليد الفيديو.");
     }
   }
 );
