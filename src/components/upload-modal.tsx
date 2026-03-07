@@ -10,8 +10,8 @@ import { PlusCircle, Sparkles, Loader2, Upload, CheckCircle2, Zap } from 'lucide
 import { generateCaptionAndHashtags } from '@/ai/flows/ai-caption-and-hashtag-generator';
 import { generateAIVideo } from '@/ai/flows/ai-video-generator';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, useStorage, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useUser, useStorage } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 export function UploadModal() {
@@ -132,8 +132,7 @@ export function UploadModal() {
         });
       }
 
-      const videosRef = collection(db, 'videos');
-      addDocumentNonBlocking(videosRef, {
+      await addDoc(collection(db, 'videos'), {
         title,
         description,
         hashtags,
@@ -152,7 +151,7 @@ export function UploadModal() {
       setIsUploading(false);
       toast({ 
         title: "فشل النشر", 
-        description: "تأكد من تفعيل Storage في Firebase.", 
+        description: "تأكد من تفعيل Storage في Firebase وتأكد من تسجيل الدخول.", 
         variant: "destructive" 
       });
     }
@@ -231,7 +230,7 @@ export function UploadModal() {
             </div>
           )}
 
-          {isUploading && selectedFile && (
+          {isUploading && (
             <div className="space-y-2 p-3 bg-white/5 rounded-xl border border-white/10">
               <div className="flex justify-between text-[10px] font-bold text-primary uppercase">
                 <span>جاري الرفع الفائق السرعة...</span>
