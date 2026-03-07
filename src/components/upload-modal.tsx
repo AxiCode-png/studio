@@ -53,7 +53,7 @@ export function UploadModal() {
     }
     setIsGeneratingVideo(true);
     try {
-      toast({ title: "جاري توليد فيديو Veo 2.0 سينمائي... انتظر قليلاً." });
+      toast({ title: "جاري توليد فيديو AXI-AI سينمائي... قد يستغرق دقيقة." });
       const result = await generateAIVideo({ prompt: description });
       setVideoUrl(result.videoDataUri);
       setIsLocalFile(false);
@@ -72,11 +72,12 @@ export function UploadModal() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // الحد الأقصى لـ Firestore هو 1MB. سنسمح بـ 700KB فقط لتفادي أخطاء الـ Base64
-      if (file.size > 0.7 * 1024 * 1024) { 
+      // زيادة المساحة المسموح بها إلى 950KB (أقصى حد لـ Firestore)
+      const MAX_SIZE = 0.95 * 1024 * 1024;
+      if (file.size > MAX_SIZE) { 
         toast({ 
-          title: "حجم الفيديو كبير جداً", 
-          description: "في النسخة التجريبية، الحد الأقصى هو 700 كيلوبايت لضمان المزامنة السحابية بدون تخزين Storage.", 
+          title: "حجم الفيديو كبير", 
+          description: "الحد الأقصى هو 950 كيلوبايت. للفيديوهات الأكبر يرجى استخدام مولد الذكاء الاصطناعي.", 
           variant: "destructive" 
         });
         return;
@@ -86,7 +87,7 @@ export function UploadModal() {
       reader.onloadend = () => {
         setVideoUrl(reader.result as string);
         setIsLocalFile(true);
-        toast({ title: "تم اختيار الفيديو! ✅ جاهز للنشر." });
+        toast({ title: "تم اختيار الفيديو بنجاح! ✅" });
       };
       reader.readAsDataURL(file);
     }
@@ -117,10 +118,10 @@ export function UploadModal() {
       setIsUploading(false);
       setOpen(false);
       resetForm();
-      toast({ title: "تم النشر بنجاح على AXI PRO MAX! 🚀" });
+      toast({ title: "تم النشر بنجاح على AXI! 🚀" });
     }).catch((err) => {
       setIsUploading(false);
-      toast({ title: "فشل النشر", description: "قد يكون حجم الفيديو كبيراً جداً على قاعدة البيانات.", variant: "destructive" });
+      toast({ title: "فشل النشر", description: "قد يكون الحجم كبيراً جداً على السيرفر الحالي.", variant: "destructive" });
     });
   };
 
@@ -142,37 +143,37 @@ export function UploadModal() {
           </div>
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-background border-primary/20 text-foreground overflow-y-auto max-h-[90vh] backdrop-blur-xl">
+      <DialogContent className="sm:max-w-lg bg-background border-primary/20 text-foreground overflow-y-auto max-h-[95vh] backdrop-blur-2xl p-6 rounded-[2rem]">
         <DialogHeader>
-          <DialogTitle className="font-headline text-2xl text-primary text-center neon-text tracking-tighter italic">AXI PUBLISH</DialogTitle>
+          <DialogTitle className="font-headline text-3xl text-primary text-center neon-text tracking-tighter italic mb-2">AXI PUBLISH</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6 pt-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-6 pt-2">
+          <div className="grid grid-cols-2 gap-4 h-32">
             <button 
               onClick={handleGenerateVideo}
               disabled={isGeneratingVideo}
-              className="border-2 border-dashed border-primary/30 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-primary/5 hover:bg-primary/10 transition-all active:scale-95 group"
+              className="border-2 border-dashed border-primary/30 rounded-2xl flex flex-col items-center justify-center gap-2 bg-primary/5 hover:bg-primary/10 transition-all active:scale-95"
             >
               {isGeneratingVideo ? (
-                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
               ) : (
-                <Sparkles className="w-10 h-10 text-primary group-hover:animate-pulse" />
+                <Sparkles className="w-8 h-8 text-primary" />
               )}
               <div className="text-center">
-                <p className="text-[10px] font-bold text-primary uppercase tracking-tighter">AI Generation</p>
-                <p className="text-[8px] text-white/40">Veo 2.0 Stable</p>
+                <p className="text-[10px] font-bold text-primary uppercase">AXI-AI Video</p>
+                <p className="text-[8px] text-white/40">Powered by Veo 2.0</p>
               </div>
             </button>
 
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-accent/30 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-accent/5 hover:bg-accent/10 transition-all active:scale-95 group"
+              className="border-2 border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center gap-2 bg-accent/5 hover:bg-accent/10 transition-all active:scale-95"
             >
-              <Upload className="w-10 h-10 text-accent group-hover:-translate-y-1 transition-transform" />
+              <Upload className="w-8 h-8 text-accent" />
               <div className="text-center">
-                <p className="text-[10px] font-bold text-accent uppercase tracking-tighter">Phone Upload</p>
-                <p className="text-[8px] text-white/40">From Gallery</p>
+                <p className="text-[10px] font-bold text-accent uppercase">Upload File</p>
+                <p className="text-[8px] text-white/40">Up to 950KB</p>
               </div>
               <input 
                 type="file" 
@@ -184,79 +185,55 @@ export function UploadModal() {
             </button>
           </div>
 
-          {isLocalFile && (
-            <div className="bg-destructive/10 border border-destructive/20 p-3 rounded-xl flex items-start gap-3">
-              <AlertCircle className="text-destructive shrink-0 mt-0.5" size={16} />
-              <p className="text-[10px] text-white/70 leading-relaxed">
-                ملاحظة: الرفع من الهاتف محدود بـ 700KB. للفيديوهات الأكبر يرجى استخدام مولد الذكاء الاصطناعي AXI-AI.
-              </p>
-            </div>
-          )}
-
           {videoUrl && (
-            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-primary/20 shadow-2xl group">
+            <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-primary/20 shadow-2xl">
               <video src={videoUrl} className="w-full h-full object-contain" controls />
-              <div className="absolute top-3 right-3 bg-primary/90 text-black text-[10px] px-3 py-1 rounded-full font-bold shadow-lg flex items-center gap-1">
-                <CheckCircle2 size={12} />
-                {isLocalFile ? 'GALLERY READY' : 'AI GENERATED'}
+              <div className="absolute top-2 right-2 bg-primary/90 text-black text-[9px] px-2 py-0.5 rounded-full font-bold shadow-lg flex items-center gap-1">
+                <CheckCircle2 size={10} />
+                READY
               </div>
             </div>
           )}
 
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] ml-1">Video Description</label>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] ml-1">Video Story</label>
               <div className="relative">
                 <Textarea 
-                  placeholder="صف الفيديو هنا لتحصل على عنوان وهاشتاقات ذكية..." 
-                  className="bg-white/5 border-none resize-none pr-12 text-white h-24 rounded-xl focus:ring-1 focus:ring-primary/30 transition-all"
+                  placeholder="صف فكرة الفيديو هنا..." 
+                  className="bg-white/5 border-none resize-none pr-10 text-white h-20 rounded-xl focus:ring-1 focus:ring-primary/30"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
                 <Button 
                   size="icon" 
                   variant="ghost" 
-                  className="absolute bottom-3 right-3 text-primary hover:bg-primary/20 rounded-lg"
+                  className="absolute bottom-2 right-2 text-primary hover:bg-primary/20"
                   onClick={handleGenerateAI}
                   disabled={isGenerating}
                 >
-                  {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles size={20} />}
+                  {isGenerating ? <Loader2 className="animate-spin size-4" /> : <Sparkles size={18} />}
                 </Button>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] ml-1">Engaging Title</label>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] ml-1">Catchy Title</label>
               <Input 
-                placeholder="عنوان الفيديو المثير..." 
-                className="bg-white/5 border-none text-white h-12 rounded-xl focus:ring-1 focus:ring-primary/30 transition-all" 
+                placeholder="عنوان الفيديو..." 
+                className="bg-white/5 border-none text-white h-11 rounded-xl focus:ring-1 focus:ring-primary/30" 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
-
-            {hashtags.length > 0 && (
-              <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                {hashtags.map(tag => (
-                  <span key={tag} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold border border-primary/20">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
 
           <Button 
-            className="w-full bg-primary text-black font-bold h-14 rounded-2xl text-lg hover:bg-primary/90 shadow-[0_10px_30px_rgba(0,229,255,0.2)] transition-all active:scale-[0.98]"
+            className="w-full bg-primary text-black font-bold h-14 rounded-2xl text-lg hover:bg-primary/90 shadow-[0_10px_30px_rgba(0,229,255,0.2)]"
             disabled={isUploading || isGeneratingVideo || !videoUrl}
             onClick={handleUpload}
           >
-            {isUploading ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="animate-spin" />
-                جاري النشر...
-              </div>
-            ) : "انشر الآن على AXI"}
+            {isUploading ? <Loader2 className="animate-spin mr-2" /> : "نشر الآن"}
           </Button>
         </div>
       </DialogContent>

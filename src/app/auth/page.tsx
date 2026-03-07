@@ -72,7 +72,7 @@ export default function AuthPage() {
       console.error("Sign up error:", error);
       let message = "حدث خطأ غير متوقع";
       if (error.code === 'auth/email-already-in-use') {
-        message = "البريد مسجل مسبقاً! جرب الدخول.";
+        message = "البريد مسجل مسبقاً! جرب الدخول بنفس الحساب.";
       } else if (error.code === 'auth/weak-password') {
         message = "كلمة السر ضعيفة جداً.";
       }
@@ -107,24 +107,23 @@ export default function AuthPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6 bg-[#0A0A0A] relative overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 blur-[120px] rounded-full" />
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 blur-[150px] rounded-full animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/20 blur-[150px] rounded-full" />
 
-      <Card className="w-full max-w-md border-primary/20 bg-black/40 backdrop-blur-2xl shadow-[0_0_80px_rgba(0,229,255,0.1)] relative z-10 rounded-[2.5rem] overflow-hidden">
-        <CardHeader className="text-center pt-10 pb-6">
-          <CardTitle className="text-6xl font-headline font-bold text-primary neon-text tracking-tighter italic">AXI</CardTitle>
-          <CardDescription className="text-white/40 text-[10px] uppercase tracking-[0.4em] font-bold mt-2">Elite Content Platform</CardDescription>
+      <Card className="w-full max-w-md border-primary/20 bg-black/50 backdrop-blur-3xl shadow-[0_0_100px_rgba(0,229,255,0.15)] relative z-10 rounded-[3rem] overflow-hidden border">
+        <CardHeader className="text-center pt-12 pb-8">
+          <CardTitle className="text-7xl font-headline font-bold text-primary neon-text tracking-tighter italic">AXI</CardTitle>
+          <CardDescription className="text-white/40 text-[11px] uppercase tracking-[0.5em] font-bold mt-3">Elite Content Platform</CardDescription>
         </CardHeader>
-        <CardContent className="px-8 pb-10">
+        <CardContent className="px-10 pb-12">
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-10 bg-white/5 rounded-2xl p-1 h-12">
-              <TabsTrigger value="login" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black font-bold uppercase text-xs">Login</TabsTrigger>
-              <TabsTrigger value="signup" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black font-bold uppercase text-xs">Join</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-10 bg-white/5 rounded-2xl p-1.5 h-14">
+              <TabsTrigger value="login" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black font-bold uppercase text-xs transition-all">Login</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-black font-bold uppercase text-xs transition-all">Join</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login" className="animate-in fade-in slide-in-from-right-4 duration-500">
-              <form onSubmit={handleLogin} className="space-y-5">
+              <form onSubmit={handleLogin} className="space-y-6">
                 <div className="space-y-4">
                   <div className="relative group">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 size-5 group-focus-within:text-primary transition-colors" />
@@ -135,7 +134,7 @@ export default function AuthPage() {
                       required
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="pl-12 bg-white/5 border-none h-14 text-white rounded-2xl focus:ring-1 focus:ring-primary/50"
+                      className="pl-12 bg-white/5 border-none h-14 text-white rounded-2xl focus:ring-1 focus:ring-primary/50 text-base"
                     />
                   </div>
                   <div className="relative group">
@@ -147,14 +146,14 @@ export default function AuthPage() {
                       required
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="pl-12 bg-white/5 border-none h-14 text-white rounded-2xl focus:ring-1 focus:ring-primary/50"
+                      className="pl-12 bg-white/5 border-none h-14 text-white rounded-2xl focus:ring-1 focus:ring-primary/50 text-base"
                     />
                   </div>
                 </div>
-                <Button className="w-full h-14 font-bold bg-primary text-black hover:bg-primary/90 text-lg rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.2)] transition-all active:scale-95 mt-4 group" disabled={isLoading}>
+                <Button className="w-full h-15 py-4 font-bold bg-primary text-black hover:bg-primary/90 text-xl rounded-2xl shadow-[0_10px_40px_rgba(0,229,255,0.3)] transition-all active:scale-95 mt-4 group" disabled={isLoading}>
                   {isLoading ? <Loader2 className="animate-spin" /> : (
                     <div className="flex items-center gap-2">
-                      Enter AXI <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                      Enter AXI <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
                     </div>
                   )}
                 </Button>
@@ -182,7 +181,7 @@ export default function AuthPage() {
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 size-5" />
                   <Input type="password" name="password" placeholder="Password (min 6)" required value={formData.password} onChange={handleInputChange} className="pl-12 bg-white/5 border-none h-14 text-white rounded-2xl" />
                 </div>
-                <Button className="w-full h-14 font-bold bg-primary text-black hover:bg-primary/90 text-lg rounded-2xl shadow-[0_10px_30px_rgba(0,229,255,0.2)] transition-all active:scale-95 mt-2" disabled={isLoading}>
+                <Button className="w-full h-15 py-4 font-bold bg-primary text-black hover:bg-primary/90 text-xl rounded-2xl shadow-[0_10px_40px_rgba(0,229,255,0.3)] transition-all active:scale-95 mt-4" disabled={isLoading}>
                   {isLoading ? <Loader2 className="animate-spin" /> : "Start Journey"}
                 </Button>
               </form>

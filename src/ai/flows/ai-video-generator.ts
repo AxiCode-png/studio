@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview A Genkit flow for generating high-quality short videos using the stable Veo 2.0 model.
+ * @fileOverview A robust Genkit flow for generating cinema-quality short videos using the stable Veo 2.0 model.
  *
  * - generateAIVideo - A function that handles the video generation process.
  * - AIVideoGeneratorInput - The input type for the function.
@@ -33,13 +33,14 @@ const aiVideoGeneratorFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      // التغيير لنموذج Veo 2.0 المستقر لحل مشكلة predictLongRunning
+      // استخدام نموذج Veo 2.0 المستقر لضمان أعلى جودة وأداء
       let { operation } = await ai.generate({
         model: googleAI.model('veo-2.0-generate-001'),
         prompt: input.prompt,
         config: {
           aspectRatio: '16:9',
           durationSeconds: 5,
+          personGeneration: 'allow_all'
         },
       });
 
@@ -47,9 +48,9 @@ const aiVideoGeneratorFlow = ai.defineFlow(
         throw new Error('لم يتمكن النظام من بدء عملية التوليد. تأكد من إعداد API Key.');
       }
 
-      // الانتظار حتى اكتمال التوليد (بحد أقصى دقيقتين)
+      // الانتظار حتى اكتمال التوليد مع زيادة عدد المحاولات لتجنب الأخطاء
       let attempts = 0;
-      const maxAttempts = 24; 
+      const maxAttempts = 30; // 30 * 5 = 150 ثانية كحد أقصى
 
       while (!operation.done && attempts < maxAttempts) {
         operation = await ai.checkOperation(operation);
@@ -65,7 +66,7 @@ const aiVideoGeneratorFlow = ai.defineFlow(
 
       const videoPart = operation.output?.message?.content.find((p) => !!p.media);
       if (!videoPart || !videoPart.media) {
-        throw new Error('فشل توليد الفيديو. قد يكون المحتوى مخالفاً لسياسات السلامة.');
+        throw new Error('فشل توليد الفيديو. قد يكون الوصف مخالفاً لسياسات السلامة.');
       }
       
       return {
