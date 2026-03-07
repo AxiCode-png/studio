@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -28,6 +29,7 @@ export default function AuthPage() {
     password: ''
   });
 
+  // توجيه المستخدم إذا كان مسجلاً بالفعل
   useEffect(() => {
     if (user && !isUserLoading) {
       router.push('/');
@@ -35,7 +37,7 @@ export default function AuthPage() {
   }, [user, isUserLoading, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.value === '' ? e.target.name : e.target.name]: e.target.value });
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -47,14 +49,31 @@ export default function AuthPage() {
     if (!auth) return;
     setIsLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      toast({ title: "تم إنشاء حسابك في AXI بنجاح! 🎉" });
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const newUser = userCredential.user;
+
+      // إنشاء الملف الشخصي فوراً بعد التسجيل الناجح
+      if (db) {
+        const userRef = doc(db, 'users', newUser.uid);
+        setDocumentNonBlocking(userRef, {
+          id: newUser.uid,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          age: parseInt(formData.age) || 0,
+          email: formData.email,
+          joinedAt: new Date().toISOString()
+        }, { merge: true });
+
+        await updateProfile(newUser, {
+          displayName: `${formData.firstName} ${formData.lastName}`
+        });
+      }
+      
+      toast({ title: "أهلاً بك في AXI PRO MAX! 🎉" });
     } catch (error: any) {
       let message = "حدث خطأ أثناء التسجيل";
       if (error.code === 'auth/email-already-in-use') {
-        message = "هذا البريد الإلكتروني مسجل مسبقاً في AXI!";
-      } else if (error.code === 'auth/weak-password') {
-        message = "كلمة السر يجب أن تكون 6 أحرف على الأقل";
+        message = "هذا البريد مسجل مسبقاً!";
       }
       toast({ title: message, variant: "destructive" });
     } finally {
@@ -68,48 +87,26 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      toast({ title: "أهلاً بك مجدداً في عالم AXI..." });
+      toast({ title: "أهلاً بك مجدداً..." });
     } catch (error: any) {
-      let message = "فشل تسجيل الدخول";
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        message = "البريد الإلكتروني أو كلمة السر غير صحيحة";
-      }
-      toast({ title: message, variant: "destructive" });
+      toast({ title: "البريد أو كلمة السر غير صحيحة", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (user && formData.firstName && !isUserLoading && db) {
-      const userRef = doc(db, 'users', user.uid);
-      setDocumentNonBlocking(userRef, {
-        id: user.uid,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        age: parseInt(formData.age) || 0,
-        email: formData.email,
-        joinedAt: new Date().toISOString()
-      }, { merge: true });
-      
-      updateProfile(user, {
-        displayName: `${formData.firstName} ${formData.lastName}`
-      }).catch(() => {});
-    }
-  }, [user, db, formData.firstName, isUserLoading, formData.lastName, formData.age, formData.email]);
-
   return (
     <main className="min-h-screen flex items-center justify-center p-4 bg-[#0A0A0A]">
-      <Card className="w-full max-w-md border-primary/20 bg-card/80 backdrop-blur-xl shadow-[0_0_50px_rgba(0,229,255,0.1)]">
+      <Card className="w-full max-w-md border-primary/20 bg-card/80 backdrop-blur-xl shadow-[0_0_50px_rgba(0,229,255,0.15)]">
         <CardHeader className="text-center space-y-1">
-          <CardTitle className="text-5xl font-headline font-bold text-primary tracking-tighter neon-text">AXI</CardTitle>
-          <CardDescription className="text-white/50 tracking-[0.2em] font-bold text-xs uppercase">Pro Max Edition</CardDescription>
+          <CardTitle className="text-5xl font-headline font-bold text-primary neon-text tracking-tighter">AXI</CardTitle>
+          <CardDescription className="text-white/50 text-xs uppercase tracking-widest font-bold">Pro Max Edition</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/20">
-              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold">تسجيل دخول</TabsTrigger>
-              <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold">حساب جديد</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/20 p-1">
+              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold">دخول</TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold">تسجيل</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -119,10 +116,10 @@ export default function AuthPage() {
                   <Input 
                     type="email" 
                     name="email" 
-                    placeholder="الجيميل (@gmail.com)" 
+                    placeholder="الجيميل" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white placeholder:text-white/30"
+                    className="pl-11 bg-white/5 border-none h-12 text-white"
                   />
                 </div>
                 <div className="relative">
@@ -133,10 +130,10 @@ export default function AuthPage() {
                     placeholder="كلمة السر" 
                     required 
                     onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white placeholder:text-white/30"
+                    className="pl-11 bg-white/5 border-none h-12 text-white"
                   />
                 </div>
-                <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all active:scale-95" disabled={isLoading}>
+                <Button className="w-full h-12 font-bold bg-primary text-black hover:bg-primary/90" disabled={isLoading}>
                   {isLoading ? <Loader2 className="animate-spin" /> : "دخول إلى عالم AXI"}
                 </Button>
               </form>
@@ -145,62 +142,17 @@ export default function AuthPage() {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 text-primary size-4" />
-                    <Input 
-                      name="firstName" 
-                      placeholder="الاسم" 
-                      required 
-                      onChange={handleInputChange}
-                      className="pl-10 bg-white/5 border-none h-11 text-sm text-white placeholder:text-white/30"
-                    />
-                  </div>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 text-primary size-4" />
-                    <Input 
-                      name="lastName" 
-                      placeholder="اللقب" 
-                      required 
-                      onChange={handleInputChange}
-                      className="pl-10 bg-white/5 border-none h-11 text-sm text-white placeholder:text-white/30"
-                    />
-                  </div>
+                  <Input name="firstName" placeholder="الاسم" required onChange={handleInputChange} className="bg-white/5 border-none h-11 text-white" />
+                  <Input name="lastName" placeholder="اللقب" required onChange={handleInputChange} className="bg-white/5 border-none h-11 text-white" />
                 </div>
                 <div className="relative">
                   <Cake className="absolute left-3 top-3 text-primary size-5" />
-                  <Input 
-                    type="number" 
-                    name="age" 
-                    placeholder="العمر" 
-                    required 
-                    onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white placeholder:text-white/30"
-                  />
+                  <Input type="number" name="age" placeholder="العمر" required onChange={handleInputChange} className="pl-11 bg-white/5 border-none h-12 text-white" />
                 </div>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 text-primary size-5" />
-                  <Input 
-                    type="email" 
-                    name="email" 
-                    placeholder="الجيميل (@gmail.com)" 
-                    required 
-                    onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white placeholder:text-white/30"
-                  />
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 text-primary size-5" />
-                  <Input 
-                    type="password" 
-                    name="password" 
-                    placeholder="كلمة السر" 
-                    required 
-                    onChange={handleInputChange}
-                    className="pl-11 bg-white/5 border-none h-12 text-white placeholder:text-white/30"
-                  />
-                </div>
-                <Button className="w-full h-12 font-bold text-lg bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all active:scale-95" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : "إنضم إلى AXI PRO MAX"}
+                <Input type="email" name="email" placeholder="الجيميل (@gmail.com)" required onChange={handleInputChange} className="bg-white/5 border-none h-12 text-white" />
+                <Input type="password" name="password" placeholder="كلمة السر" required onChange={handleInputChange} className="bg-white/5 border-none h-12 text-white" />
+                <Button className="w-full h-12 font-bold bg-primary text-black hover:bg-primary/90" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "إنضم الآن"}
                 </Button>
               </form>
             </TabsContent>
