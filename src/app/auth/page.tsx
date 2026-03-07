@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -33,7 +32,6 @@ export default function AuthPage() {
     password: ''
   });
 
-  // توجيه تلقائي إذا كان المستخدم مسجل دخوله بالفعل
   useEffect(() => {
     if (user && !isUserLoading) {
       router.push('/');
@@ -54,7 +52,6 @@ export default function AuthPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const newUser = userCredential.user;
 
-      // حفظ بيانات المستخدم الإضافية في Firestore
       await setDoc(doc(db, 'users', newUser.uid), {
         id: newUser.uid,
         firstName: formData.firstName,
@@ -68,12 +65,12 @@ export default function AuthPage() {
         displayName: `${formData.firstName} ${formData.lastName}`
       });
 
-      toast({ title: "أهلاً بك في AXI PRO MAX! 🎉" });
+      toast({ title: "أهلاً بك في عالم AXI PRO MAX! 🎉" });
       router.push('/');
     } catch (error: any) {
       let message = "حدث خطأ أثناء التسجيل";
       if (error.code === 'auth/email-already-in-use') message = "هذا البريد مسجل مسبقاً!";
-      else if (error.code === 'auth/weak-password') message = "كلمة السر ضعيفة جداً";
+      else if (error.code === 'auth/weak-password') message = "كلمة السر يجب أن تكون 6 أحرف على الأقل";
       toast({ title: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -87,10 +84,10 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      toast({ title: "تم الدخول بنجاح..." });
+      toast({ title: "تم الدخول بنجاح! 🚀" });
       router.push('/');
     } catch (error: any) {
-      toast({ title: "البريد أو كلمة السر غير صحيحة", variant: "destructive" });
+      toast({ title: "خطأ في البريد أو كلمة السر", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -107,13 +104,13 @@ export default function AuthPage() {
       <Card className="w-full max-w-md border-primary/20 bg-card/80 backdrop-blur-xl shadow-[0_0_50px_rgba(0,229,255,0.15)]">
         <CardHeader className="text-center space-y-1">
           <CardTitle className="text-5xl font-headline font-bold text-primary neon-text tracking-tighter">AXI</CardTitle>
-          <CardDescription className="text-white/50 text-xs uppercase tracking-widest font-bold">Pro Max Edition</CardDescription>
+          <CardDescription className="text-white/50 text-xs uppercase tracking-widest font-bold">Pro Max AI Edition</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/20 p-1">
-              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold">دخول</TabsTrigger>
-              <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold">تسجيل</TabsTrigger>
+              <TabsTrigger value="login" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold uppercase">دخول</TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-black font-bold uppercase">تسجيل</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -142,8 +139,8 @@ export default function AuthPage() {
                     className="pl-11 bg-white/5 border-none h-12 text-white"
                   />
                 </div>
-                <Button className="w-full h-12 font-bold bg-primary text-black hover:bg-primary/90" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : "دخول إلى عالم AXI"}
+                <Button className="w-full h-12 font-bold bg-primary text-black hover:bg-primary/90 text-lg shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all active:scale-95" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "دخول إلى AXI"}
                 </Button>
               </form>
             </TabsContent>
@@ -169,7 +166,7 @@ export default function AuthPage() {
                   <Lock className="absolute left-3 top-3 text-primary size-5" />
                   <Input type="password" name="password" placeholder="كلمة السر" required value={formData.password} onChange={handleInputChange} className="pl-11 bg-white/5 border-none h-12 text-white" />
                 </div>
-                <Button className="w-full h-12 font-bold bg-primary text-black hover:bg-primary/90" disabled={isLoading}>
+                <Button className="w-full h-12 font-bold bg-primary text-black hover:bg-primary/90 text-lg shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all active:scale-95" disabled={isLoading}>
                   {isLoading ? <Loader2 className="animate-spin" /> : "إنضم الآن"}
                 </Button>
               </form>

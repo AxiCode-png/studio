@@ -1,10 +1,10 @@
 'use server';
 /**
- * @fileOverview A Genkit flow for generating short videos from text descriptions using Veo.
+ * @fileOverview A Genkit flow for generating high-quality short videos using the latest Veo 3 model.
  *
- * - generateAIVideo - A function that handles the video generation process.
- * - AIVideoGeneratorInput - The input type for the generateAIVideo function.
- * - AIVideoGeneratorOutput - The return type for the generateAIVideo function.
+ * - generateAIVideo - A function that handles the video generation process with Veo 3.
+ * - AIVideoGeneratorInput - The input type for the function.
+ * - AIVideoGeneratorOutput - The return type.
  */
 
 import {ai} from '@/ai/genkit';
@@ -32,12 +32,11 @@ const aiVideoGeneratorFlow = ai.defineFlow(
     outputSchema: AIVideoGeneratorOutputSchema,
   },
   async (input) => {
-    // Note: Video generation is resource-intensive and may take up to a minute.
+    // استخدام Veo 3.0 المطور لتوليد فيديوهات سينمائية مع الصوت
     let { operation } = await ai.generate({
-      model: googleAI.model('veo-2.0-generate-001'),
+      model: googleAI.model('veo-3.0-generate-preview'),
       prompt: input.prompt,
       config: {
-        durationSeconds: 5,
         aspectRatio: '16:9',
       },
     });
@@ -46,7 +45,7 @@ const aiVideoGeneratorFlow = ai.defineFlow(
       throw new Error('Expected the model to return an operation');
     }
 
-    // Polling for completion
+    // الانتظار حتى اكتمال التوليد (قد يستغرق حوالي دقيقة)
     while (!operation.done) {
       operation = await ai.checkOperation(operation);
       await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -60,12 +59,7 @@ const aiVideoGeneratorFlow = ai.defineFlow(
     if (!videoPart || !videoPart.media) {
       throw new Error('Failed to find the generated video in the output');
     }
-
-    // Since we can't easily download and stream back in this prototype, 
-    // we assume the media.url is accessible or we'd typically convert to base64.
-    // In a real app, you'd download from the temporary URL and upload to Firebase Storage.
     
-    // For the sake of the prototype, we return the URL directly or a mock data URI if needed.
     return {
       videoDataUri: videoPart.media.url
     };
