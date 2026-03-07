@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Navigation } from '@/components/navigation';
-import { Grid, Lock, Bookmark, Heart, LogOut, Radio, Settings } from 'lucide-react';
+import { Grid, Bookmark, Heart, LogOut, Radio } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -41,7 +41,8 @@ export default function ProfilePage() {
     }
   };
 
-  if (isUserLoading || !user) return null;
+  if (isUserLoading) return null;
+  if (!user) return null;
 
   return (
     <main className="min-h-screen bg-[#0A0A0A] pb-20 overflow-x-hidden">
