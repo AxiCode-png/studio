@@ -5,12 +5,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
 import { PlusCircle, Sparkles, Loader2, Upload, Video, FileVideo, CheckCircle2, AlertCircle } from 'lucide-react';
 import { generateCaptionAndHashtags } from '@/ai/flows/ai-caption-and-hashtag-generator';
 import { generateAIVideo } from '@/ai/flows/ai-video-generator';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser, addDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, useStorage, addDocumentNonBlocking } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 export function UploadModal() {
   const [description, setDescription] = useState('');
@@ -19,13 +21,15 @@ export function UploadModal() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [open, setOpen] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
-  const [isLocalFile, setIsLocalFile] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useUser();
   const db = useFirestore();
+  const storage = useStorage();
   const { toast } = useToast();
 
   const handleGenerateAI = async () => {
@@ -56,7 +60,7 @@ export function UploadModal() {
       toast({ title: "جاري توليد فيديو AXI-AI سينمائي... قد يستغرق دقيقة." });
       const result = await generateAIVideo({ prompt: description });
       setVideoUrl(result.videoDataUri);
-      setIsLocalFile(false);
+      setSelectedFile(null);
       toast({ title: "تم توليد الفيديو بنجاح! 🎬" });
     } catch (error: any) {
       toast({ 
@@ -72,28 +76,23 @@ export function UploadModal() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // زيادة المساحة المسموح بها إلى 950KB (أقصى حد لـ Firestore)
-      const MAX_SIZE = 0.95 * 1024 * 1024;
+      const MAX_SIZE = 100 * 1024 * 1024; // 100MB
       if (file.size > MAX_SIZE) { 
         toast({ 
-          title: "حجم الفيديو كبير", 
-          description: "الحد الأقصى هو 950 كيلوبايت. للفيديوهات الأكبر يرجى استخدام مولد الذكاء الاصطناعي.", 
+          title: "حجم الفيديو كبير جداً", 
+          description: "الحد الأقصى هو 100 ميجابايت.", 
           variant: "destructive" 
         });
         return;
       }
       
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setVideoUrl(reader.result as string);
-        setIsLocalFile(true);
-        toast({ title: "تم اختيار الفيديو بنجاح! ✅" });
-      };
-      reader.readAsDataURL(file);
+      setSelectedFile(file);
+      setVideoUrl(URL.createObjectURL(file));
+      toast({ title: "تم اختيار الفيديو بنجاح! ✅" });
     }
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!user) {
       toast({ title: "يرجى تسجيل الدخول أولاً.", variant: "destructive" });
       return;
@@ -104,25 +103,57 @@ export function UploadModal() {
     }
 
     setIsUploading(true);
-    const videosRef = collection(db, 'videos');
-    
-    addDocumentNonBlocking(videosRef, {
-      title,
-      description,
-      hashtags,
-      videoUrl: videoUrl,
-      uploaderId: user.uid,
-      likesCount: 0,
-      uploadTimestamp: serverTimestamp()
-    }).then(() => {
+    let finalVideoUrl = videoUrl;
+
+    try {
+      // إذا كان الملف محلياً، نرفعه لـ Storage أولاً
+      if (selectedFile) {
+        toast({ title: "جاري رفع الفيديو إلى السيرفر السحابي..." });
+        const storageRef = ref(storage, `videos/${user.uid}/${Date.now()}_${selectedFile.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+
+        finalVideoUrl = await new Promise((resolve, reject) => {
+          uploadTask.on('state_changed', 
+            (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              setUploadProgress(progress);
+            }, 
+            (error) => {
+              console.error("Storage error:", error);
+              reject(error);
+            }, 
+            async () => {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve(downloadURL);
+            }
+          );
+        });
+      }
+
+      const videosRef = collection(db, 'videos');
+      await addDocumentNonBlocking(videosRef, {
+        title,
+        description,
+        hashtags,
+        videoUrl: finalVideoUrl,
+        uploaderId: user.uid,
+        likesCount: 0,
+        uploadTimestamp: serverTimestamp()
+      });
+
       setIsUploading(false);
       setOpen(false);
       resetForm();
       toast({ title: "تم النشر بنجاح على AXI! 🚀" });
-    }).catch((err) => {
+    } catch (err: any) {
+      console.error("Upload error:", err);
       setIsUploading(false);
-      toast({ title: "فشل النشر", description: "قد يكون الحجم كبيراً جداً على السيرفر الحالي.", variant: "destructive" });
-    });
+      toast({ 
+        title: "فشل النشر", 
+        description: "تأكد من تفعيل Storage في Firebase Console.", 
+        variant: "destructive" 
+      });
+    }
   };
 
   const resetForm = () => {
@@ -130,7 +161,8 @@ export function UploadModal() {
     setTitle('');
     setHashtags([]);
     setVideoUrl('');
-    setIsLocalFile(false);
+    setSelectedFile(null);
+    setUploadProgress(0);
   };
 
   return (
@@ -145,7 +177,7 @@ export function UploadModal() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg bg-background border-primary/20 text-foreground overflow-y-auto max-h-[95vh] backdrop-blur-2xl p-6 rounded-[2rem]">
         <DialogHeader>
-          <DialogTitle className="font-headline text-3xl text-primary text-center neon-text tracking-tighter italic mb-2">AXI PUBLISH</DialogTitle>
+          <DialogTitle className="font-headline text-3xl text-primary text-center neon-text tracking-tighter italic mb-2">AXI PUBLISH PRO</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6 pt-2">
@@ -162,7 +194,7 @@ export function UploadModal() {
               )}
               <div className="text-center">
                 <p className="text-[10px] font-bold text-primary uppercase">AXI-AI Video</p>
-                <p className="text-[8px] text-white/40">Powered by Veo 2.0</p>
+                <p className="text-[8px] text-white/40">Cinema Quality</p>
               </div>
             </button>
 
@@ -172,8 +204,8 @@ export function UploadModal() {
             >
               <Upload className="w-8 h-8 text-accent" />
               <div className="text-center">
-                <p className="text-[10px] font-bold text-accent uppercase">Upload File</p>
-                <p className="text-[8px] text-white/40">Up to 950KB</p>
+                <p className="text-[10px] font-bold text-accent uppercase">Phone Upload</p>
+                <p className="text-[8px] text-white/40">Up to 100MB</p>
               </div>
               <input 
                 type="file" 
@@ -192,6 +224,16 @@ export function UploadModal() {
                 <CheckCircle2 size={10} />
                 READY
               </div>
+            </div>
+          )}
+
+          {isUploading && selectedFile && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-[10px] font-bold text-primary uppercase">
+                <span>جاري الرفع...</span>
+                <span>{Math.round(uploadProgress)}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2 bg-white/5" />
             </div>
           )}
 
