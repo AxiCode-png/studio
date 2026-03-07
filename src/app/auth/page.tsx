@@ -3,9 +3,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
-import { updateProfile, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
+import { useAuth, useFirestore, useUser } from '@/firebase';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile
+} from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +33,7 @@ export default function AuthPage() {
     password: ''
   });
 
+  // توجيه تلقائي إذا كان المستخدم مسجل دخوله بالفعل
   useEffect(() => {
     if (user && !isUserLoading) {
       router.push('/');
@@ -43,40 +48,32 @@ export default function AuthPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !db) return;
-    
-    if (!formData.email.endsWith("@gmail.com")) {
-      toast({ title: "الرجاء استخدام Gmail فقط!", variant: "destructive" });
-      return;
-    }
 
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const newUser = userCredential.user;
 
-      const userRef = doc(db, 'users', newUser.uid);
-      setDocumentNonBlocking(userRef, {
+      // حفظ بيانات المستخدم الإضافية في Firestore
+      await setDoc(doc(db, 'users', newUser.uid), {
         id: newUser.uid,
         firstName: formData.firstName,
         lastName: formData.lastName,
         age: parseInt(formData.age) || 0,
         email: formData.email,
         joinedAt: new Date().toISOString()
-      }, { merge: true });
+      });
 
       await updateProfile(newUser, {
         displayName: `${formData.firstName} ${formData.lastName}`
       });
-      
+
       toast({ title: "أهلاً بك في AXI PRO MAX! 🎉" });
       router.push('/');
     } catch (error: any) {
       let message = "حدث خطأ أثناء التسجيل";
-      if (error.code === 'auth/email-already-in-use') {
-        message = "هذا البريد مسجل مسبقاً!";
-      } else if (error.code === 'auth/weak-password') {
-        message = "كلمة السر ضعيفة جداً";
-      }
+      if (error.code === 'auth/email-already-in-use') message = "هذا البريد مسجل مسبقاً!";
+      else if (error.code === 'auth/weak-password') message = "كلمة السر ضعيفة جداً";
       toast({ title: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
@@ -86,11 +83,11 @@ export default function AuthPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
-    
+
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      toast({ title: "أهلاً بك مجدداً..." });
+      toast({ title: "تم الدخول بنجاح..." });
       router.push('/');
     } catch (error: any) {
       toast({ title: "البريد أو كلمة السر غير صحيحة", variant: "destructive" });
@@ -99,7 +96,11 @@ export default function AuthPage() {
     }
   };
 
-  if (isUserLoading) return null;
+  if (isUserLoading) return (
+    <div className="h-screen w-full flex items-center justify-center bg-black">
+      <Loader2 className="w-12 h-12 text-primary animate-spin" />
+    </div>
+  );
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 bg-[#0A0A0A]">
@@ -119,11 +120,11 @@ export default function AuthPage() {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 text-primary size-5" />
-                  <Input 
-                    type="email" 
-                    name="email" 
-                    placeholder="الجيميل" 
-                    required 
+                  <Input
+                    type="email"
+                    name="email"
+                    placeholder="البريد الإلكتروني"
+                    required
                     value={formData.email}
                     onChange={handleInputChange}
                     className="pl-11 bg-white/5 border-none h-12 text-white"
@@ -131,11 +132,11 @@ export default function AuthPage() {
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 text-primary size-5" />
-                  <Input 
-                    type="password" 
-                    name="password" 
-                    placeholder="كلمة السر" 
-                    required 
+                  <Input
+                    type="password"
+                    name="password"
+                    placeholder="كلمة السر"
+                    required
                     value={formData.password}
                     onChange={handleInputChange}
                     className="pl-11 bg-white/5 border-none h-12 text-white"
@@ -150,15 +151,24 @@ export default function AuthPage() {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <Input name="firstName" placeholder="الاسم" required value={formData.firstName} onChange={handleInputChange} className="bg-white/5 border-none h-11 text-white" />
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 text-primary size-4" />
+                    <Input name="firstName" placeholder="الاسم" required value={formData.firstName} onChange={handleInputChange} className="pl-10 bg-white/5 border-none h-11 text-white" />
+                  </div>
                   <Input name="lastName" placeholder="اللقب" required value={formData.lastName} onChange={handleInputChange} className="bg-white/5 border-none h-11 text-white" />
                 </div>
                 <div className="relative">
                   <Cake className="absolute left-3 top-3 text-primary size-5" />
                   <Input type="number" name="age" placeholder="العمر" required value={formData.age} onChange={handleInputChange} className="pl-11 bg-white/5 border-none h-12 text-white" />
                 </div>
-                <Input type="email" name="email" placeholder="الجيميل (@gmail.com)" required value={formData.email} onChange={handleInputChange} className="bg-white/5 border-none h-12 text-white" />
-                <Input type="password" name="password" placeholder="كلمة السر" required value={formData.password} onChange={handleInputChange} className="bg-white/5 border-none h-12 text-white" />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 text-primary size-5" />
+                  <Input type="email" name="email" placeholder="البريد الإلكتروني" required value={formData.email} onChange={handleInputChange} className="pl-11 bg-white/5 border-none h-12 text-white" />
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 text-primary size-5" />
+                  <Input type="password" name="password" placeholder="كلمة السر" required value={formData.password} onChange={handleInputChange} className="pl-11 bg-white/5 border-none h-12 text-white" />
+                </div>
                 <Button className="w-full h-12 font-bold bg-primary text-black hover:bg-primary/90" disabled={isLoading}>
                   {isLoading ? <Loader2 className="animate-spin" /> : "إنضم الآن"}
                 </Button>

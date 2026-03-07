@@ -41,8 +41,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (isUserLoading) return null;
-  if (!user) return null;
+  if (isUserLoading || !user) return null;
 
   return (
     <main className="min-h-screen bg-[#0A0A0A] pb-20 overflow-x-hidden">
@@ -57,7 +56,7 @@ export default function ProfilePage() {
         <h2 className="text-2xl font-headline font-bold mb-1 text-white">
           {profile ? `${profile.firstName} ${profile.lastName}` : 'AXI User'}
         </h2>
-        
+
         <div className="flex items-center gap-2 mb-6">
           <p className="text-primary/70 text-sm font-medium">@{profile?.firstName?.toLowerCase() || 'user'}</p>
           {profile?.age && (
@@ -73,11 +72,11 @@ export default function ProfilePage() {
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">فيديو</p>
           </div>
           <div className="text-center border-x border-white/10 px-10">
-            <p className="font-bold text-xl text-white">1.2K</p>
+            <p className="font-bold text-xl text-white">0</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">متابع</p>
           </div>
           <div className="text-center">
-            <p className="font-bold text-xl text-white">850</p>
+            <p className="font-bold text-xl text-white">0</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">متابعة</p>
           </div>
         </div>
@@ -98,24 +97,9 @@ export default function ProfilePage() {
             <TabsTrigger value="likes" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none"><Heart size={22} className="text-white" /></TabsTrigger>
             <TabsTrigger value="bookmarks" className="flex-1 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none shadow-none"><Bookmark size={22} className="text-white" /></TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="videos" className="mt-1">
-            <div className="grid grid-cols-3 gap-0.5">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="aspect-[3/4] bg-muted/20 relative group overflow-hidden">
-                  <img 
-                    src={`https://picsum.photos/seed/vid${i}${user.uid}/300/400`} 
-                    alt="AXI Content" 
-                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-2 left-2 flex items-center gap-1">
-                    <Heart size={12} className="fill-primary text-primary" />
-                    <span className="text-[10px] text-white font-bold">12K</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+             <div className="p-10 text-muted-foreground text-sm italic">لا توجد فيديوهات منشورة بعد</div>
           </TabsContent>
         </Tabs>
       </div>
